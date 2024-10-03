@@ -35,7 +35,7 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
     lastname = models.CharField(max_length=55)
     phone = models.CharField(max_length=15, blank=True)
     address = models.TextField(blank=True)
-    photo = models.ImageField(blank=True)
+    profilephoto = models.ImageField(blank=True)
     otp = models.CharField(max_length=6, blank=True, null=True)
     otp_expiration = models.DateTimeField(blank=True, null=True)
 
