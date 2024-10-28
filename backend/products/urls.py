@@ -1,5 +1,6 @@
 from django.urls import path
+from .views import UploadProduct
 
 urlpatterns = [
-    # path('uploadproduct/', )
+    path('uploadproduct/', UploadProduct.as_view(), name='UploadProduct')
 ]
