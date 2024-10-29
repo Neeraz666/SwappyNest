@@ -1,8 +1,11 @@
 from django.shortcuts import render
+import string
 from rest_framework.views import APIView
 from rest_framework import permissions
 from .models import Product
 from rest_framework.response import Response
+from rest_framework.generics import ListAPIView, RetrieveAPIView
+from .serializers import ProductSerializer
 
 # Create your views here.
 class UploadProduct(APIView):
@@ -36,3 +39,7 @@ class UploadProduct(APIView):
         except Exception as e:
             return Response({'error': e})
         
+class ListAllProduct(ListAPIView):
+    permission_classes = (permissions.AllowAny, )
+    queryset = Product.objects.all().order_by('id')
+    serializer_class = ProductSerializer
