@@ -10,6 +10,7 @@ class UploadProduct(APIView):
 
     def post(self, request):
         try:
+            currentuser = request.user
             productdata = self.request.data
 
             productname = productdata['productname']
@@ -20,6 +21,7 @@ class UploadProduct(APIView):
             category = productdata['category']
 
             product = Product(
+                user = currentuser,
                 productname = productname, 
                 productpic = productpic,
                 description = description,
@@ -33,3 +35,4 @@ class UploadProduct(APIView):
             return Response({'success': 'Your product has been sucessfully uploaded.'})
         except Exception as e:
             return Response({'error': e})
+        
