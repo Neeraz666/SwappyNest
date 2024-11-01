@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'user',
     'products',
+    'chat',
 ]
 
 CORS_ORIGIN_WHITELIST = [
