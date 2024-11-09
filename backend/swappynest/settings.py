@@ -44,6 +44,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'user',
     'products',
+    'chat',
+    'channels',
 ]
 
 CORS_ORIGIN_WHITELIST = [
@@ -83,7 +85,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'swappynest.wsgi.application'
-
+ASGI_APPLICATION = 'swappynest.asgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
@@ -117,7 +119,17 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
-
+# to run redis run the below code download garna parcha hai docker bata locally run garna kta ho
+#pip install channels_redis
+#docker run -p 6379:6379 -d redis:latest
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [("127.0.0.1", 6379)], 
+        },
+    },
+}
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
