@@ -46,6 +46,9 @@ INSTALLED_APPS = [
     'products',
     'chat',
     'channels',
+    'rest_framework',
+    'rest_framework_simplejwt.token_blacklist',
+    'corsheaders',
 ]
 
 CORS_ORIGIN_WHITELIST = [
