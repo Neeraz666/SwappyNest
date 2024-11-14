@@ -1,205 +1,247 @@
-import React, { useState } from "react";
-import { Avatar, Box, Typography, IconButton, InputBase, Modal } from "@mui/material";
-import { FavoriteBorder, Comment, Share } from "@mui/icons-material";
-import CommentSection from './CommentSection';
-import Slider from "react-slick";
+import React, { useEffect, useState } from 'react';
+import { Box, Typography, Avatar, IconButton, TextField, Card, CardContent, CardActions } from '@mui/material';
+import { FavoriteBorder, ChatBubbleOutline, Share } from '@mui/icons-material';
+import genericProfileImage from '../assets/profile.png';
 
 const Feed = () => {
-    const [open, setOpen] = useState(false); // Modal open state
-    const [selectedPost, setSelectedPost] = useState(null); // Selected post for the modal
+    const [products, setProducts] = useState([]);
+    const [showMore, setShowMore] = useState({});
 
-    const comments = [
-        { user: "User 1", avatar: "https://picsum.photos/200", text: "This is an awesome offer!" },
-        { user: "User 2", avatar: "https://picsum.photos/200", text: "I'm really interested in this." },
-        { user: "User 3", avatar: "https://picsum.photos/200", text: "What's the lowest you'll accept?" },
-        // Additional comments...
-    ];
+    useEffect(() => {
+        const fetchProducts = async () => {
+            try {
+                const response = await fetch('http://127.0.1:8000/api/products/listallproduct/');
+                const data = await response.json();
+                setProducts(data.results);
+            } catch (error) {
+                console.error('Error fetching products:', error);
+            }
+        };
 
-    const settings = {
-        dots: true,
-        infinite: true,
-        speed: 500,
-        slidesToShow: 1,
-        slidesToScroll: 1,
-    };
+        fetchProducts();
+    }, []);
 
-    // Handle open and close of modal
-    const handleOpen = (post) => {
-        setSelectedPost(post);
-        setOpen(true);
-    };
-    const handleClose = () => setOpen(false);
-
-    // Dummy post data
-    const posts = [
-        {
-            id: 1,
-            user: 'Viserys',
-            date: '2024-10-23',
-            content: 'Show me something that is worthy of Rolex swap',
-            media: [
-                "https://picsum.photos/400/300",
-                "https://picsum.photos/400/300",
-            ]
+    const renderImages = (images) => {
+        const totalImages = images.length;
+        
+        if (totalImages === 0) {
+            return null;
         }
-    ];
 
-    return (
-        <Box sx={{ maxWidth: '700px', margin: '0 auto', marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-            {/* Posts */}
-            {posts.map((post) => (
-                <Box key={post.id} sx={{ mb: 2, p: 2, border: "1px solid #ccc", borderRadius: "8px" }}>
-                    <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-                        <img
-                            src="https://picsum.photos/400/300"
-                            alt="Profile"
-                            style={{ height: 40, width: 40, borderRadius: "50%", marginRight: 10 }}
-                        />
-                        <Box>
-                            <Typography variant="h6">{post.user}</Typography>
-                            <Typography variant="caption">{post.date}</Typography>
-                        </Box>
-                    </Box>
-                    <Typography sx={{ mb: 1 }}>{post.content}</Typography>
-
-                    {/* Carousel */}
-                    <Slider {...settings}>
-                        {post.media.map((media, index) => (
-                            <Box key={index} onClick={() => handleOpen(post)} sx={{ cursor: 'pointer' }}>
-                                {media.endsWith(".mp4") ? (
-                                    <video controls src={media} style={{ width: '100%', height: 'auto' }} />
-                                ) : (
-                                    <img src={media} alt={`Post Image ${index + 1}`} style={{ width: '100%', height: 'auto' }} />
-                                )}
-                            </Box>
-                        ))}
-                    </Slider>
-
-                    {/* Interaction */}
-                    <Box sx={{ display: "flex", justifyContent: "space-between", my: 2, paddingTop: 2 }}>
-                        <IconButton
-                            disableRipple
-                            sx={{
-                                padding: 0, // Remove default padding
-                                '&:hover': { color: 'primary.dark' }
-                            }}
-                        >
-                            <FavoriteBorder />
-                            <Typography variant="body2">Like</Typography>
-                        </IconButton>
-                        <IconButton
-                            disableRipple
-                            onClick={() => handleOpen(post)}
-                            sx={{
-                                padding: 0, // Remove default padding
-                                '&:hover': { color: 'primary.dark' }
-                            }}
-                        >
-                            <Comment />
-                            <Typography variant="body2">Comment</Typography>
-                        </IconButton>
-                        <IconButton
-                            disableRipple
-                            sx={{
-                                padding: 0, // Remove default padding
-                                '&:hover': { color: 'primary.dark' }
-                            }}
-                        >
-                            <Share />
-                            <Typography variant="body2">Share</Typography>
-                        </IconButton>
-                    </Box>
-
-
-                    {/* Display top comment with avatar */}
-                    <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 2 }}>
-                        <Avatar alt={comments[0].user} src={comments[0].avatar} sx={{ width: 40, height: 40, marginRight: '10px' }} />
-                        <Box>
-                            <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 0.5 }}>{comments[0].user}</Typography>
-                            <Typography variant="body2" sx={{ color: 'text.secondary' }}>{comments[0].text}</Typography>
-                        </Box>
-                    </Box>
-
-
-
-
-                    {/* Comment Input */}
-                    <InputBase
-                        placeholder="Place your offer..."
-                        fullWidth
-                        sx={{p: 1, border: "1px solid #ccc", borderRadius: "4px" }}
+        if (totalImages === 1) {
+            return (
+                <Box sx={{ height: 300, marginTop: 1 }}>
+                    <Box 
+                        sx={{ 
+                            height: '100%', 
+                            bgcolor: 'grey.300', 
+                            backgroundImage: `url(${images[0].image})`, 
+                            backgroundSize: 'cover', 
+                            backgroundPosition: 'center' 
+                        }} 
                     />
                 </Box>
-            ))}
+            );
+        }
 
-            {/* Modal */}
-            <Modal open={open} onClose={handleClose}>
-                <Box sx={{
-                    position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-                    width: '80%', bgcolor: 'background.paper', boxShadow: 24, p: 4
-                }}>
-                    {selectedPost && (
-                        <Box sx={{ display: "flex", gap: 2 }}>
-                            {/* Left section (Image/Video) */}
-                            <Box sx={{ width: "65%" }}>
-                                <Slider {...settings}>
-                                    {selectedPost.media.map((media, index) => (
-                                        <Box key={index}>
-                                            {media.endsWith(".mp4") ? (
-                                                <video controls src={media} style={{ width: '100%', height: 'auto' }} />
-                                            ) : (
-                                                <img src={media} alt={`Post Image ${index + 1}`} style={{ width: '100%', height: 'auto' }} />
-                                            )}
-                                        </Box>
-                                    ))}
-                                </Slider>
-                            </Box>
+        if (totalImages === 2) {
+            return (
+                <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, height: 300, marginTop: 1 }}>
+                    {images.map((img, index) => (
+                        <Box 
+                            key={index}
+                            sx={{ 
+                                height: '100%', 
+                                bgcolor: 'grey.300', 
+                                backgroundImage: `url(${img.image})`, 
+                                backgroundSize: 'cover', 
+                                backgroundPosition: 'center' 
+                            }} 
+                        />
+                    ))}
+                </Box>
+            );
+        }
 
-                            {/* Right section (Description and Comments) */}
-                            <Box sx={{ width: "35%", display: "flex", flexDirection: "column" }}>
-                                {/* Avatar in Modal */}
-                                <Box sx={{ display: "flex", alignItems: "center" }}>
-                                    <img
-                                        src="https://picsum.photos/400/300"
-                                        alt="Profile"
-                                        style={{ height: 40, width: 40, borderRadius: "50%", marginRight: 10 }}
-                                    />
-                                    <Box>
-                                        <Typography variant="h6">{selectedPost.user}</Typography>
-                                        <Typography variant="caption">{selectedPost.date}</Typography>
-                                    </Box>
-                                </Box>
-
-                                <Typography variant="body2" sx={{ mt: 2 }}>{selectedPost.content}</Typography>
-
-                                {/* Interaction */}
-                                <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2, padding: 0 }}>
-                                    <IconButton disableRipple sx={{ '&:hover': { color: 'primary.dark' } }}>
-                                        <FavoriteBorder />
-                                        <Typography variant="body2">Like</Typography>
-                                    </IconButton>
-                                    <IconButton disableRipple sx={{ '&:hover': { color: 'primary.dark' } }}>
-                                        <Share />
-                                        <Typography variant="body2">Share</Typography>
-                                    </IconButton>
-                                </Box>
-
-                                {/* Comment Section */}
-                                <Box sx={{ flexGrow: 1, overflowY: 'auto', maxHeight: '300px', mt: 2 }}>
-                                    <CommentSection comments={comments} />
-                                </Box>
-
-                                {/* Comment Input in Modal - Aligned to carousel */}
-                                <InputBase
-                                    placeholder="Place your offer..."
-                                    fullWidth
-                                    sx={{ mt: 2, p: 1, border: "1px solid #ccc", borderRadius: "4px", marginTop: 0 }}
-                                />
-                            </Box>
+        return (
+            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, height: 300, marginTop: 1 }}>
+                <Box 
+                    sx={{ 
+                        gridRow: 'span 2', 
+                        bgcolor: 'grey.300', 
+                        backgroundImage: `url(${images[0].image})`, 
+                        backgroundSize: 'cover', 
+                        backgroundPosition: 'center' 
+                    }} 
+                />
+                <Box 
+                    sx={{ 
+                        bgcolor: 'grey.300', 
+                        backgroundImage: `url(${images[1].image})`, 
+                        backgroundSize: 'cover', 
+                        backgroundPosition: 'center' 
+                    }} 
+                />
+                <Box 
+                    sx={{ 
+                        position: 'relative',
+                        bgcolor: 'grey.300', 
+                        backgroundImage: `url(${images[2].image})`, 
+                        backgroundSize: 'cover', 
+                        backgroundPosition: 'center' 
+                    }}
+                >
+                    {totalImages > 3 && (
+                        <Box
+                            sx={{
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                width: '100%',
+                                height: '100%',
+                                bgcolor: 'rgba(0, 0, 0, 0.5)',
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                            }}
+                        >
+                            <Typography variant="h6" sx={{ color: 'white' }}>+{totalImages - 3}</Typography>
                         </Box>
                     )}
                 </Box>
-            </Modal>
+            </Box>
+        );
+    };
+
+    const handleToggleDescription = (id) => {
+        setShowMore((prevState) => ({
+            ...prevState,
+            [id]: !prevState[id],
+        }));
+    };
+
+    return (
+        <Box>
+            {products.map((product) => {
+                const { id, productname, description, purchaseyear, condition, created_at, user, images } = product;
+                const avatarSrc = user.profilephoto ? user.profilephoto : genericProfileImage;
+
+                return (
+                    <Card
+                        key={id}
+                        variant="outlined"
+                        sx={{
+                            maxWidth: '700px',
+                            margin: '0 auto',
+                            marginTop: '1rem',
+                            padding: 2,
+                            boxShadow: 3,
+                            border: '1px solid #ccc',
+                            borderRadius: '8px',
+                        }}
+                    >
+                        <Box display="flex" justifyContent="space-between" alignItems="center">
+                            <Box>
+                                <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>{productname}</Typography>
+                                <Typography variant="caption">{created_at} | {condition}</Typography>
+                            </Box>
+                            <Box display="flex" alignItems="center">
+                                <Typography variant="body2" sx={{ marginRight: 1 }}>{user.username}</Typography>
+                                <Avatar sx={{ width: 40, height: 40 }} src={avatarSrc} />
+                            </Box>
+                        </Box>
+
+                        <CardContent sx={{ paddingLeft: 0, paddingRight: 0 }}>
+                            <Typography variant="body2">Year of Purchase: {purchaseyear}</Typography>
+                            <Typography variant="body2" sx={{ marginTop: 1 }}>
+                                Description: {description.length > 100 
+                                    ? (showMore[id] 
+                                        ? description 
+                                        : description.slice(0, 100))
+                                    : description}
+                                {description.length > 100 && (
+                                    <>
+                                        {!showMore[id] && '...'}
+                                        <Typography
+                                            component="span"
+                                            variant="body2"
+                                            onClick={() => handleToggleDescription(id)}
+                                            sx={{
+                                                color: 'primary.main',
+                                                cursor: 'pointer',
+                                                '&:hover': { textDecoration: 'underline' },
+                                                marginLeft: '4px',
+                                            }}
+                                        >
+                                            {showMore[id] ? 'Show less' : 'See more'}
+                                        </Typography>
+                                    </>
+                                )}
+                            </Typography>
+                        </CardContent>
+
+                        {renderImages(images)}
+
+                        <CardActions
+                            disableSpacing
+                            sx={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                paddingY: 2,
+                                paddingLeft: 0,
+                                paddingRight: 0,
+                                marginTop: 1,
+                            }}
+                        >
+                            <IconButton aria-label="like" sx={{ marginLeft: 0, padding: 0, '&:hover': { color: 'primary.dark' } }}>
+                                <FavoriteBorder />
+                            </IconButton>
+
+                            <IconButton aria-label="comment" sx={{ marginLeft: 'auto', marginRight: 'auto', padding: 0, '&:hover': { color: 'primary.dark' } }}>
+                                <ChatBubbleOutline />
+                            </IconButton>
+
+                            <IconButton aria-label="share" sx={{ marginRight: 0, padding: 0, '&:hover': { color: 'primary.dark' } }}>
+                                <Share />
+                            </IconButton>
+                        </CardActions>
+
+                        <Box display="flex" alignItems="center" sx={{ marginBottom: 2.5 }}>
+                            <Avatar sx={{ width: 40, height: 40 }}>PP</Avatar>
+                            <Box sx={{ marginLeft: 1 }}>
+                                <Typography variant="body2">{user.username}</Typography>
+                                <Typography variant="body2">Comment: Lorem Ipsum</Typography>
+                            </Box>
+                        </Box>
+
+                        <Box sx={{ marginTop: 1 }}>
+                            <TextField
+                                variant="standard"
+                                size="small"
+                                placeholder="Place your offer"
+                                fullWidth
+                                sx={{
+                                    p: 1,
+                                    border: '1px solid #ccc',
+                                    borderRadius: '4px',
+                                    '& .MuiInputBase-root': {
+                                        border: 'none',
+                                    },
+                                    '& .MuiInput-underline:before': {
+                                        border: 'none',
+                                    },
+                                    '&:hover .MuiInput-underline:before': {
+                                        border: 'none',
+                                    },
+                                    '&:focus .MuiInput-underline:before': {
+                                        border: 'none',
+                                    },
+                                }}
+                            />
+                        </Box>
+                    </Card>
+                );
+            })}
         </Box>
     );
 };

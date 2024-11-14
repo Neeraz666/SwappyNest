@@ -10,11 +10,17 @@ const Navbar = () => {
   const { isAuth, logout, userData } = useAuth();
   const navigate = useNavigate();
 
+  const handleLogoClick = () => {
+    navigate('/');
+  };
+
   return (
     <AppBar position="static" sx={{ backgroundColor: '#f9f8f6', padding: 0 }} elevation={0}>
       <Toolbar sx={{ maxWidth: '1400px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 0 }}>
         <Box sx={{ display: "flex", alignItems: "center" }}>
-          <img src={Logo} alt="Swappy Nest Logo" style={{ height: '5rem', marginRight: '10px' }} />
+          <IconButton onClick={handleLogoClick} sx={{ display: "flex", alignItems: "center" }}>
+            <img src={Logo} alt="Swappy Nest Logo" style={{ height: '5rem', marginRight: '10px' }} />
+          </IconButton>
 
           <Box sx={{
             display: 'flex',

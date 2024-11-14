@@ -2,9 +2,9 @@ from django.shortcuts import render
 import string
 from rest_framework.views import APIView
 from rest_framework import permissions
-from .models import Product
+from .models import Product, Image
 from rest_framework.response import Response
-from rest_framework.generics import ListAPIView, RetrieveAPIView
+from rest_framework.generics import ListAPIView
 from .serializers import ProductSerializer
 
 # Create your views here.
@@ -14,30 +14,32 @@ class UploadProduct(APIView):
     def post(self, request):
         try:
             currentuser = request.user
-            productdata = self.request.data
+            productdata = request.data
 
             productname = productdata['productname']
-            productpic = productdata['productpic']
             description = productdata['description']
-            purchaseyear  = productdata['purchaseyear']
+            purchaseyear = productdata['purchaseyear']
             condition = productdata['condition']
             category = productdata['category']
 
-            product = Product(
-                user = currentuser,
-                productname = productname, 
-                productpic = productpic,
-                description = description,
-                purchaseyear = purchaseyear,
-                condition = condition,
-                category = category
+            # Save product without images
+            product = Product.objects.create(
+                user=currentuser,
+                productname=productname,
+                description=description,
+                purchaseyear=purchaseyear,
+                condition=condition,
+                category=category
             )
-            
-            product.save()
 
-            return Response({'success': 'Your product has been sucessfully uploaded.'})
+            # Handle multiple images
+            images = productdata.getlist('images')  # assumes images are sent as a list of files
+            for image in images:
+                Image.objects.create(product=product, image=image)
+
+            return Response({'success': 'Your product has been successfully uploaded.'})
         except Exception as e:
-            return Response({'error': e})
+            return Response({'error': str(e)}, status=400)
         
 class ListAllProduct(ListAPIView):
     permission_classes = (permissions.AllowAny, )
