@@ -1,13 +1,15 @@
 from django.shortcuts import render
-import string
 from rest_framework.views import APIView
 from rest_framework import permissions
 from .models import Product, Image
 from rest_framework.response import Response
 from rest_framework.generics import ListAPIView
 from .serializers import ProductSerializer
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
 
-# Create your views here.
+
+
 class UploadProduct(APIView):
     permission_classes = (permissions.IsAuthenticated,)
 

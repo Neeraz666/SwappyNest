@@ -14,6 +14,10 @@ const Navbar = () => {
     navigate('/');
   };
 
+  const handleUploadProduct = () => {
+    navigate('/upload');
+  };
+
   return (
     <AppBar position="static" sx={{ backgroundColor: '#f9f8f6', padding: 0 }} elevation={0}>
       <Toolbar sx={{ maxWidth: '1400px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 0 }}>
@@ -48,12 +52,13 @@ const Navbar = () => {
         <Box sx={{ display: "flex", alignItems: "center", ml: 2 }}>
           <IconButton
             sx={{
-              height: '4rem',
-              width: '4rem',
-              '&:hover': { color: 'primary.dark' }
+              height: "4rem",
+              width: "4rem",
+              "&:hover": { color: "primary.dark" },
             }}
+            onClick={handleUploadProduct} // Attach the handleClick function
           >
-            <Add sx={{ height: '2rem', width: '2rem' }} />
+            <Add sx={{ height: "2rem", width: "2rem" }} />
           </IconButton>
           <IconButton
             sx={{
