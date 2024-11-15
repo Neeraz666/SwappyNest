@@ -6,6 +6,8 @@ from .models import Product
 from rest_framework.response import Response
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from .serializers import ProductSerializer
+from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.feature_extraction.text import TfidfVectorizer
 
 # Create your views here.
 
@@ -69,3 +71,51 @@ class ListCategoricalProduct(ListAPIView):
         
         # If category_slug doesn't exits, none will be returned
         return Product.objects.none()
+
+class ProductSearchView(APIView):
+    permission_classes = (permissions.AllowAny,)
+    serializer_class = ProductSerializer
+    
+    def get_queryset(self):
+        search_query = self.request.query_params.get('q', None)
+
+        if not search_query:
+            return Product.objects.none()
+        
+        products = Product.objects.all()
+        product_data = [product.productname + " " + product.description for product in products]
+
+        query_vector = self.generate_query_vector(search_query)
+
+        similarities = []
+
+        for product, product_text in zip(products, product_data):
+            product_vector = self.generate_query_vector(product_text)
+            similarity = self.compute_cosine_similarity(query_vector, product_vector)
+            similarities.append((product, similarity))
+
+        similarities.sort(key=lambda x: x[1], reverse=True)
+
+        print(similarities)
+
+        top_products = similarities[:15]
+
+        serialized_products = self.serializer_class([product for product, _ in top_products], many = True)
+
+        return Response({
+            'product': serialized_products.data,
+        })
+    
+    def generate_query_vector(self, text):
+        """
+        Converts text (query or product data) into a vector using TF-IDF.
+        You can replace this with other methods like Word2Vec or BERT.
+        """
+        vectorizer = TfidfVectorizer(stop_words='english')
+        return vectorizer.fit_transform([text]).toarray()
+
+    def compute_cosine_similarity(self, vec1, vec2):
+        """
+        Computes cosine similarity between two vectors.
+        """
+        return cosine_similarity(vec1, vec2)[0][0]
