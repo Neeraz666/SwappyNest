@@ -44,8 +44,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'user',
     'products',
-    'chat',
-    'channels',
+    # 'chat',
+    # 'channels',
     'rest_framework',
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
@@ -125,14 +125,14 @@ AUTH_PASSWORD_VALIDATORS = [
 # to run redis run the below code download garna parcha hai docker bata locally run garna kta ho
 #pip install channels_redis
 #docker run -p 6379:6379 -d redis:latest
-CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        'CONFIG': {
-            "hosts": [("127.0.0.1", 6379)], 
-        },
-    },
-}
+# CHANNEL_LAYERS = {
+#     'default': {
+#         'BACKEND': 'channels_redis.core.RedisChannelLayer',
+#         'CONFIG': {
+#             "hosts": [("127.0.0.1", 6379)], 
+#         },
+#     },
+# }
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/

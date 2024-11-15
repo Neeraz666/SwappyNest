@@ -34,7 +34,6 @@ urlpatterns = [
 
     path('api/logout/', LogoutView.as_view(), name='Logout'),
     
-    path('api/chat/', include('chat.urls')),
 ]
 
 
