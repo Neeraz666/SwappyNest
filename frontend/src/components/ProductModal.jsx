@@ -13,22 +13,6 @@ import Carousel from "react-multi-carousel";
 import "react-multi-carousel/lib/styles.css";
 
 export default function ProductModal({ open, onClose, product }) {
-  const defaultProduct = {
-    name: "MacBook",
-    uploadDate: "2024-11-15 10:11",
-    condition: "Used",
-    purchaseYear: "2022",
-    description: "Product description goes here",
-    images: [
-      "/placeholder.svg?height=400&width=600",
-      "/placeholder.svg?height=400&width=600",
-      "/placeholder.svg?height=400&width=600"
-    ],
-    uploadedBy: "username"
-  };
-
-  product = product || defaultProduct;
-
   const [tabValue, setTabValue] = useState(0);
 
   const responsive = {
@@ -50,59 +34,82 @@ export default function ProductModal({ open, onClose, product }) {
     setTabValue(newValue);
   };
 
-  const renderCarousel = () => (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <Carousel
-        responsive={responsive}
-        showDots
-        arrows // Remove navigation arrows
-        renderDotsOutside // Render dots outside
-        draggable // Enable drag
-        swipeable // Enable swipe
-        infinite // Enable infinite scrolling
-        minimumTouchDrag={50} // Reduce drag threshold
-        transitionDuration={400} // Smooth transition
-        containerClass="carousel-container"
-        dotListClass="custom-dot-list"
-        itemClass="carousel-item"
-      >
-        {product.images.map((image, index) => (
-          <Box
-            key={index}
-            sx={{
-              width: '100%',
-              height: '80vh', // Fixed height for image container in the modal (adjust as needed)
-              display: 'flex',
-              alignItems: 'center', // Center the image vertically
-              justifyContent: 'center', // Center the image horizontally
-              backgroundColor: '#fff', // Light greyish color for the empty space
-            }}
-          >
-            <img
-              src={image}
-              alt={`Product ${index + 1}`}
-              style={{
-                width: '100%', // Ensure it fills the width of the container
-                height: '100%', // Ensure it fills the height of the container
-                objectFit: 'contain', // Ensure the image fits within the box without cropping
-                display: 'block',
+  const renderCarousel = () => {
+    const images = product?.images || [];
+    
+    if (images.length === 0) {
+      return (
+        <Box
+          sx={{
+            width: '100%',
+            height: '80vh',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: '#f0f0f0',
+          }}
+        >
+          <Typography variant="h6">No images available</Typography>
+        </Box>
+      );
+    }
+
+    return (
+      <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <Carousel
+          responsive={responsive}
+          showDots
+          arrows
+          renderDotsOutside
+          draggable
+          swipeable
+          infinite
+          minimumTouchDrag={50}
+          transitionDuration={400}
+          containerClass="carousel-container"
+          dotListClass="custom-dot-list"
+          itemClass="carousel-item"
+        >
+          {images.map((image, index) => (
+            <Box
+              key={index}
+              sx={{
+                width: '100%',
+                height: '80vh',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: '#fff',
               }}
-            />
-          </Box>
-        ))}
-      </Carousel>
+            >
+              <img
+                src={image}
+                alt={`Product ${index + 1}`}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'contain',
+                  display: 'block',
+                }}
+              />
+            </Box>
+          ))}
+        </Carousel>
 
+        <Box
+          sx={{
+            textAlign: 'center',
+            mt: 2,
+          }}
+          className="custom-dot-wrapper"
+        />
+      </Box>
+    );
+  };
 
-      {/* Dots Wrapper for Styling */}
-      <Box
-        sx={{
-          textAlign: 'center',
-          mt: 2,
-        }}
-        className="custom-dot-wrapper"
-      />
-    </Box>
-  );
+  if (!product) {
+    return null; // or return a loading indicator, or an error message
+  }
 
   return (
     <Dialog
@@ -122,7 +129,6 @@ export default function ProductModal({ open, onClose, product }) {
     >
       <DialogContent sx={{ p: 0, height: '100%' }}>
         <Grid container sx={{ height: '100%' }}>
-          {/* Left side - Carousel */}
           <Grid
             item
             xs={12}
@@ -137,7 +143,6 @@ export default function ProductModal({ open, onClose, product }) {
             {renderCarousel()}
           </Grid>
 
-          {/* Right side - Product Details */}
           <Grid
             item
             xs={12}
@@ -150,10 +155,10 @@ export default function ProductModal({ open, onClose, product }) {
             }}
           >
             <Box sx={{ p: 3, flexGrow: 1 }}>
-              <Typography variant="h6" gutterBottom>Product Name: {product.name}</Typography>
-              <Typography variant="body2" color="text.secondary">Upload Date: {product.uploadDate}</Typography>
-              <Typography variant="body2">Condition: {product.condition}</Typography>
-              <Typography variant="body2">Year of Purchase: {product.purchaseYear}</Typography>
+              <Typography variant="h6" gutterBottom>{product.name || 'Not Provided'}</Typography>
+              <Typography variant="body2" color="text.secondary">Upload Date: {product.uploadDate || 'Not Provided'}</Typography>
+              <Typography variant="body2">Condition: {product.condition || 'Not Provided'}</Typography>
+              <Typography variant="body2">Year of Purchase: {product.purchaseYear || 'Not Provided'}</Typography>
 
               <Box sx={{ borderBottom: 1, borderColor: 'divider', mt: 2 }}>
                 <Tabs value={tabValue} onChange={handleTabChange} variant="fullWidth" aria-label="product details tabs">
@@ -163,7 +168,7 @@ export default function ProductModal({ open, onClose, product }) {
               </Box>
               <Box sx={{ mt: 2 }}>
                 {tabValue === 0 && (
-                  <Typography variant="body2">{product.description}</Typography>
+                  <Typography variant="body2">{product.description || 'No description provided'}</Typography>
                 )}
                 {tabValue === 1 && (
                   <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
@@ -179,7 +184,7 @@ export default function ProductModal({ open, onClose, product }) {
 
             <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ p: 3, borderTop: 1, borderColor: 'divider' }}>
               <Typography variant="body2" color="text.secondary">
-                Uploaded By: {product.uploadedBy}
+                Uploaded By: {product.uploadedBy || 'Not Provided'}
               </Typography>
               <Avatar sx={{ width: 40, height: 40 }} src={product.userProfilePic} />
             </Box>
