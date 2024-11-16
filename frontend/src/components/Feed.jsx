@@ -3,8 +3,11 @@ import { Box, Typography, Avatar, IconButton, TextField, Card, CardContent, Card
 import { FavoriteBorder, ChatBubbleOutline, Share } from '@mui/icons-material';
 import genericProfileImage from '../assets/profile.png';
 import ProductModal from './ProductModal';
+import { defaultComments } from '../defaultComment';
+import CommentSection from './CommentSection';
 
-const Feed = () => {
+
+export default function Feed() {
     const [products, setProducts] = useState([]);
     const [showMore, setShowMore] = useState({});
     const [modalOpen, setModalOpen] = useState(false);
@@ -210,7 +213,11 @@ const Feed = () => {
                                 <FavoriteBorder />
                             </IconButton>
 
-                            <IconButton aria-label="comment" sx={{ marginLeft: 'auto', marginRight: 'auto', padding: 0, '&:hover': { color: 'primary.dark' } }}>
+                            <IconButton
+                                aria-label="comment"
+                                sx={{ marginLeft: 'auto', marginRight: 'auto', padding: 0, '&:hover': { color: 'primary.dark' } }}
+                                onClick={() => handleOpenModal(product)}
+                            >
                                 <ChatBubbleOutline />
                             </IconButton>
 
@@ -219,13 +226,7 @@ const Feed = () => {
                             </IconButton>
                         </CardActions>
 
-                        <Box display="flex" alignItems="center" sx={{ marginBottom: 2.5 }}>
-                            <Avatar sx={{ width: 40, height: 40 }}>PP</Avatar>
-                            <Box sx={{ marginLeft: 1 }}>
-                                <Typography variant="body2">{user.username}</Typography>
-                                <Typography variant="body2">Comment: Lorem Ipsum</Typography>
-                            </Box>
-                        </Box>
+                        <CommentSection comments={defaultComments.slice(0, 1)} />
 
                         <Box sx={{ marginTop: 1 }}>
                             <TextField
@@ -266,11 +267,9 @@ const Feed = () => {
                     description: selectedProduct.description,
                     images: selectedProduct.images.map(img => img.image),
                     uploadedBy: selectedProduct.user.username,
-                    userProfilePic: selectedProduct.user.profilephoto || genericProfileImage, // Pass the profile picture URL
+                    userProfilePic: selectedProduct.user.profilephoto || genericProfileImage,
                 } : null}
             />
         </Box>
     );
-};
-
-export default Feed;
+}

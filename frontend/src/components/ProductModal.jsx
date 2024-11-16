@@ -11,6 +11,8 @@ import {
 } from '@mui/material';
 import Carousel from "react-multi-carousel";
 import "react-multi-carousel/lib/styles.css";
+import { defaultComments } from '../defaultComment';  // Default comments import
+import CommentSection from './CommentSection'; // Import the CommentSection component
 
 export default function ProductModal({ open, onClose, product }) {
   const [tabValue, setTabValue] = useState(0);
@@ -36,7 +38,7 @@ export default function ProductModal({ open, onClose, product }) {
 
   const renderCarousel = () => {
     const images = product?.images || [];
-    
+
     if (images.length === 0) {
       return (
         <Box
@@ -154,7 +156,7 @@ export default function ProductModal({ open, onClose, product }) {
               overflowY: 'auto',
             }}
           >
-            <Box sx={{ p: 3, flexGrow: 1 }}>
+            <Box sx={{ p: 3, flexGrow: 1, overflowY: 'auto', maxHeight: 'calc(100vh - 100px)' }}>
               <Typography variant="h6" gutterBottom>{product.name || 'Not Provided'}</Typography>
               <Typography variant="body2" color="text.secondary">Upload Date: {product.uploadDate || 'Not Provided'}</Typography>
               <Typography variant="body2">Condition: {product.condition || 'Not Provided'}</Typography>
@@ -166,17 +168,15 @@ export default function ProductModal({ open, onClose, product }) {
                   <Tab label="Comments" />
                 </Tabs>
               </Box>
+
               <Box sx={{ mt: 2 }}>
                 {tabValue === 0 && (
                   <Typography variant="body2">{product.description || 'No description provided'}</Typography>
                 )}
                 {tabValue === 1 && (
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                    <Avatar sx={{ mr: 2 }}>CA</Avatar>
-                    <Box>
-                      <Typography variant="subtitle2">Comment Author</Typography>
-                      <Typography variant="body2" color="text.secondary">This is a sample comment.</Typography>
-                    </Box>
+                  <Box sx={{ mt: 2 }}>
+                    {/* Pass the defaultComments to the CommentSection component */}
+                    <CommentSection comments={defaultComments} />
                   </Box>
                 )}
               </Box>
