@@ -2,10 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Box, Typography, Avatar, IconButton, TextField, Card, CardContent, CardActions } from '@mui/material';
 import { FavoriteBorder, ChatBubbleOutline, Share } from '@mui/icons-material';
 import genericProfileImage from '../assets/profile.png';
+import ProductModal from './ProductModal';
 
 const Feed = () => {
     const [products, setProducts] = useState([]);
     const [showMore, setShowMore] = useState({});
+    const [modalOpen, setModalOpen] = useState(false);
+    const [selectedProduct, setSelectedProduct] = useState(null);
 
     useEffect(() => {
         const fetchProducts = async () => {
@@ -21,24 +24,34 @@ const Feed = () => {
         fetchProducts();
     }, []);
 
-    const renderImages = (images) => {
+    const handleOpenModal = (product) => {
+        setSelectedProduct(product);
+        setModalOpen(true);
+    };
+
+    const handleCloseModal = () => {
+        setModalOpen(false);
+        setSelectedProduct(null);
+    };
+
+    const renderImages = (images, product) => {
         const totalImages = images.length;
-        
+
         if (totalImages === 0) {
             return null;
         }
 
         if (totalImages === 1) {
             return (
-                <Box sx={{ height: 300, marginTop: 1 }}>
-                    <Box 
-                        sx={{ 
-                            height: '100%', 
-                            bgcolor: 'grey.300', 
-                            backgroundImage: `url(${images[0].image})`, 
-                            backgroundSize: 'cover', 
-                            backgroundPosition: 'center' 
-                        }} 
+                <Box sx={{ height: 300, marginTop: 1, cursor: 'pointer' }} onClick={() => handleOpenModal(product)}>
+                    <Box
+                        sx={{
+                            height: '100%',
+                            bgcolor: 'grey.300',
+                            backgroundImage: `url(${images[0].image})`,
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'center',
+                        }}
                     />
                 </Box>
             );
@@ -46,17 +59,17 @@ const Feed = () => {
 
         if (totalImages === 2) {
             return (
-                <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, height: 300, marginTop: 1 }}>
+                <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, height: 300, marginTop: 1, cursor: 'pointer' }} onClick={() => handleOpenModal(product)}>
                     {images.map((img, index) => (
-                        <Box 
+                        <Box
                             key={index}
-                            sx={{ 
-                                height: '100%', 
-                                bgcolor: 'grey.300', 
-                                backgroundImage: `url(${img.image})`, 
-                                backgroundSize: 'cover', 
-                                backgroundPosition: 'center' 
-                            }} 
+                            sx={{
+                                height: '100%',
+                                bgcolor: 'grey.300',
+                                backgroundImage: `url(${img.image})`,
+                                backgroundSize: 'cover',
+                                backgroundPosition: 'center',
+                            }}
                         />
                     ))}
                 </Box>
@@ -64,31 +77,31 @@ const Feed = () => {
         }
 
         return (
-            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, height: 300, marginTop: 1 }}>
-                <Box 
-                    sx={{ 
-                        gridRow: 'span 2', 
-                        bgcolor: 'grey.300', 
-                        backgroundImage: `url(${images[0].image})`, 
-                        backgroundSize: 'cover', 
-                        backgroundPosition: 'center' 
-                    }} 
+            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, height: 300, marginTop: 1, cursor: 'pointer' }} onClick={() => handleOpenModal(product)}>
+                <Box
+                    sx={{
+                        gridRow: 'span 2',
+                        bgcolor: 'grey.300',
+                        backgroundImage: `url(${images[0].image})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                    }}
                 />
-                <Box 
-                    sx={{ 
-                        bgcolor: 'grey.300', 
-                        backgroundImage: `url(${images[1].image})`, 
-                        backgroundSize: 'cover', 
-                        backgroundPosition: 'center' 
-                    }} 
+                <Box
+                    sx={{
+                        bgcolor: 'grey.300',
+                        backgroundImage: `url(${images[1].image})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                    }}
                 />
-                <Box 
-                    sx={{ 
+                <Box
+                    sx={{
                         position: 'relative',
-                        bgcolor: 'grey.300', 
-                        backgroundImage: `url(${images[2].image})`, 
-                        backgroundSize: 'cover', 
-                        backgroundPosition: 'center' 
+                        bgcolor: 'grey.300',
+                        backgroundImage: `url(${images[2].image})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
                     }}
                 >
                     {totalImages > 3 && (
@@ -154,9 +167,9 @@ const Feed = () => {
                         <CardContent sx={{ paddingLeft: 0, paddingRight: 0 }}>
                             <Typography variant="body2">Year of Purchase: {purchaseyear}</Typography>
                             <Typography variant="body2" sx={{ marginTop: 1 }}>
-                                Description: {description.length > 100 
-                                    ? (showMore[id] 
-                                        ? description 
+                                Description: {description.length > 100
+                                    ? (showMore[id]
+                                        ? description
                                         : description.slice(0, 100))
                                     : description}
                                 {description.length > 100 && (
@@ -180,7 +193,7 @@ const Feed = () => {
                             </Typography>
                         </CardContent>
 
-                        {renderImages(images)}
+                        {renderImages(images, product)}
 
                         <CardActions
                             disableSpacing
@@ -242,6 +255,20 @@ const Feed = () => {
                     </Card>
                 );
             })}
+            <ProductModal
+                open={modalOpen}
+                onClose={handleCloseModal}
+                product={selectedProduct ? {
+                    name: selectedProduct.productname,
+                    uploadDate: selectedProduct.created_at,
+                    condition: selectedProduct.condition,
+                    purchaseYear: selectedProduct.purchaseyear,
+                    description: selectedProduct.description,
+                    images: selectedProduct.images.map(img => img.image),
+                    uploadedBy: selectedProduct.user.username,
+                    userProfilePic: selectedProduct.user.profilephoto || genericProfileImage, // Pass the profile picture URL
+                } : null}
+            />
         </Box>
     );
 };

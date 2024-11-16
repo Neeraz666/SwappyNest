@@ -5,7 +5,6 @@ from .models import Product, Image
 from rest_framework.response import Response
 from rest_framework.generics import ListAPIView
 from .serializers import ProductSerializer
-from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
 
@@ -35,7 +34,7 @@ class UploadProduct(APIView):
             )
 
             # Handle multiple images
-            images = productdata.getlist('images')  # assumes images are sent as a list of files
+            images = productdata.getlist('images') 
             for image in images:
                 Image.objects.create(product=product, image=image)
 
