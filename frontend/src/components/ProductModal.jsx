@@ -7,8 +7,11 @@ import {
   Typography,
   Box,
   Grid,
-  Avatar
+  Avatar,
+  CardActions,
+  IconButton,
 } from '@mui/material';
+import { FavoriteBorder, Share } from '@mui/icons-material';
 import Carousel from "react-multi-carousel";
 import "react-multi-carousel/lib/styles.css";
 import { defaultComments } from '../defaultComment';  // Default comments import
@@ -161,6 +164,27 @@ export default function ProductModal({ open, onClose, product }) {
               <Typography variant="body2" color="text.secondary">Upload Date: {product.uploadDate || 'Not Provided'}</Typography>
               <Typography variant="body2">Condition: {product.condition || 'Not Provided'}</Typography>
               <Typography variant="body2">Year of Purchase: {product.purchaseYear || 'Not Provided'}</Typography>
+              <CardActions
+                disableSpacing
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  paddingY: 2,
+                  paddingLeft: 0,
+                  paddingRight: 0,
+                  marginTop: 1,
+                }}
+              >
+                <IconButton aria-label="like" sx={{ marginLeft: 0, padding: 0, '&:hover': { color: 'primary.dark' } }}>
+                  <FavoriteBorder />
+                </IconButton>
+
+
+
+                <IconButton aria-label="share" sx={{ marginRight: 0, padding: 0, '&:hover': { color: 'primary.dark' } }}>
+                  <Share />
+                </IconButton>
+              </CardActions>
 
               <Box sx={{ borderBottom: 1, borderColor: 'divider', mt: 2 }}>
                 <Tabs value={tabValue} onChange={handleTabChange} variant="fullWidth" aria-label="product details tabs">
