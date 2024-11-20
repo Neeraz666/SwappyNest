@@ -158,18 +158,32 @@ export default function Feed() {
                     >
                         <Box display="flex" justifyContent="space-between" alignItems="center">
                             <Box>
-                                <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>{productname}</Typography>
-                                <Typography variant="caption">{created_at} | {condition}</Typography>
+                                <Typography variant="subtitle1" sx={{ fontSize: '2rem', fontWeight: 'bold' }}>{productname}</Typography>
+                                <Typography component='span' variant="caption">{created_at} | </Typography>
+                                <Typography
+                                    component="span"
+                                    variant="caption"
+                                    sx={{
+                                        fontWeight:'bold',
+                                        display: 'inline-block',
+                                        padding: '4px 8px',
+                                        backgroundColor: '#e0e7ff',
+                                        borderRadius: '4px',
+                                        color: '#000',
+                                    }}
+                                >
+                                    {condition}
+                                </Typography>
                             </Box>
                             <Box display="flex" alignItems="center">
-                                <Typography variant="body2" sx={{ marginRight: 1 }}>{user.username}</Typography>
+                                <Typography variant="body2" sx={{ fontSize: '1.2rem', marginRight: 1 }}>{user.username}</Typography>
                                 <Avatar sx={{ width: 40, height: 40 }} src={avatarSrc} />
                             </Box>
                         </Box>
 
                         <CardContent sx={{ paddingLeft: 0, paddingRight: 0 }}>
-                            <Typography variant="body2">Year of Purchase: {purchaseyear}</Typography>
-                            <Typography variant="body2" sx={{ marginTop: 1 }}>
+                            <Typography sx={{ fontSize: '1.1rem', }} variant="body2">Year of Purchase: {purchaseyear}</Typography>
+                            <Typography variant="body2" sx={{ fontSize: '1.1rem', marginTop: 1 }}>
                                 Description: {description.length > 100
                                     ? (showMore[id]
                                         ? description
