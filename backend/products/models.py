@@ -1,3 +1,4 @@
+import uuid
 from django.db import models
 from user.models import UserAccount
 
@@ -39,11 +40,22 @@ class Product(models.Model):
 
     user = models.ForeignKey(UserAccount, on_delete=models.CASCADE)
     productname = models.CharField(max_length=100)
-    productpic = models.ImageField(upload_to='productpics')
+    # productpic = models.ImageField(upload_to='productpics')
     description = models.TextField(blank=True)
-    purchaseyear = models.DateTimeField()
+    purchaseyear = models.DateField()
     condition = models.CharField(max_length=10, choices=CONDITION_CHOICES)
     category = models.CharField(max_length=100, choices=CATEGORY_CHOICES)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.productname 
+    
+class Image(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
+    image = models.ImageField(upload_to='products')
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+
+    def __str__(self):
+        return f"{self.uuid}--{self.product.productname}"
+    

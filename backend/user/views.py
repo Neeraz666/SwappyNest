@@ -1,5 +1,6 @@
 from rest_framework import permissions
 from rest_framework.views import APIView
+from rest_framework.generics import RetrieveAPIView
 from rest_framework.response import Response
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
@@ -44,3 +45,12 @@ class SignUpView(APIView):
             
         else:
             return Response({'error': 'Passwords donot match! Try again.'})
+
+
+class UserDetail(RetrieveAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = UserSerializer
+
+    def get_object(self):
+        return self.request.user
+    

@@ -1,56 +1,50 @@
 from django.shortcuts import render
-import string
 from rest_framework.views import APIView
-from rest_framework import permissions
-from .models import Product
+from rest_framework import permissions, status
+from .models import Product, Image
 from rest_framework.response import Response
-from rest_framework.generics import ListAPIView, RetrieveAPIView
+from rest_framework.generics import ListAPIView
 from .serializers import ProductSerializer
+from rest_framework.response import Response
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.feature_extraction.text import TfidfVectorizer
 
-# Create your views here.
 
 class UploadProduct(APIView):
-    # UploadProduct function uses APIView and the user should be authenticated (permissions.IsAuthenticated)
     permission_classes = (permissions.IsAuthenticated,)
 
     def post(self, request):
         try:
-            # Current user is retrieved and the data coming from the frontend is stored in productdata
             currentuser = request.user
-            productdata = self.request.data
+            productdata = request.data
 
             productname = productdata['productname']
-            productpic = productdata['productpic']
             description = productdata['description']
-            purchaseyear  = productdata['purchaseyear']
+            purchaseyear = productdata['purchaseyear']
             condition = productdata['condition']
             category = productdata['category']
 
-            # The data retrieved from the frontend is saved to the Product model
-            product = Product(
-                user = currentuser,
-                productname = productname, 
-                productpic = productpic,
-                description = description,
-                purchaseyear = purchaseyear,
-                condition = condition,
-                category = category
+            # Save product without images
+            product = Product.objects.create(
+                user=currentuser,
+                productname=productname,
+                description=description,
+                purchaseyear=purchaseyear,
+                condition=condition,
+                category=category
             )
-            
-            product.save()
-            
-            # If the product is successfully saved the following response will be returned else error will be returned
-            return Response({'success': 'Your product has been sucessfully uploaded.'})
+
+            # Handle multiple images
+            images = productdata.getlist('images')
+            for image in images:
+                Image.objects.create(product=product, image=image)
+
+            return Response({'success': 'Your product has been successfully uploaded.'})
         except Exception as e:
-            return Response({'error': e})
-        
+            return Response({'error': str(e)}, status=400)
+
+
 class ListAllProduct(ListAPIView):
-    """
-        ListAllProduct uses ListAPIView to list the products
-        The function doesn't need authentication to be called and the products are sent as per the 'id' in ascending order
-    """
     permission_classes = (permissions.AllowAny, )
     queryset = Product.objects.all().order_by('id')
     serializer_class = ProductSerializer
@@ -118,5 +112,8 @@ class ProductSearchView(ListAPIView):
         Computes cosine similarity between two vectors.
         """
         return cosine_similarity(vec1, vec2)[0][0]
+<<<<<<< HEAD
     
 
+=======
+>>>>>>> 9a2b661b795d67a2ad4e72bd306024b151bca721
