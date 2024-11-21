@@ -3,7 +3,7 @@ from .views import UploadProduct, ListAllProduct, ListCategoricalProduct, Produc
 
 urlpatterns = [
     path('uploadproduct/', UploadProduct.as_view(), name='UploadProduct'),
+    path('search/', ProductSearchView.as_view(), name='ProductSearchView'),
     path('listallproduct/', ListAllProduct.as_view(), name='ListAllProduct'),
     path('<slug:slug>/', ListCategoricalProduct.as_view(), name='ListCategoricalProduct'),
-    path('search/', ProductSearchView.as_view(), name='ProductSearchView'),
 ]
