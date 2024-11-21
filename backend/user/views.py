@@ -7,6 +7,7 @@ from django.core.exceptions import ValidationError
 from .serializers import UserSerializer
 from rest_framework.generics import RetrieveAPIView
 
+
 User = get_user_model()
 
 # Create your views here.
@@ -53,3 +54,4 @@ class UserDetail(RetrieveAPIView):
 
     def get_object(self):
         return self.request.user
+    
