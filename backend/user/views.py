@@ -1,12 +1,11 @@
 from rest_framework import permissions
 from rest_framework.views import APIView
+from rest_framework.generics import RetrieveAPIView
 from rest_framework.response import Response
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from .serializers import UserSerializer
-from rest_framework.generics import RetrieveAPIView
-
 
 User = get_user_model()
 
