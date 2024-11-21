@@ -111,10 +111,12 @@ class ProductSearchView(ListAPIView):
         # Serialize the products to return
         serialized_products = self.serializer_class([product for product, _ in top_products], many=True)
 
-        return Response(serialized_products.data)
+        return Response(serialized_products.data[10])
     
     def compute_cosine_similarity(self, vec1, vec2):
         """
         Computes cosine similarity between two vectors.
         """
         return cosine_similarity(vec1, vec2)[0][0]
+    
+
