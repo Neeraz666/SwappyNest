@@ -54,12 +54,17 @@ INSTALLED_APPS = [
 CORS_ORIGIN_WHITELIST = [
     'http://localhost:3000',
 ]
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:3000',  # Your React app's local address
+    'http://localhost:5173',  # Include Vite's default port
+]
 
 CORS_ALLOW_CREDENTIALS = True
 
 CORS_ORIGIN_ALLOW_ALL = True
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -125,14 +130,14 @@ AUTH_PASSWORD_VALIDATORS = [
 # to run redis run the below code download garna parcha hai docker bata locally run garna kta ho
 #pip install channels_redis
 #docker run -p 6379:6379 -d redis:latest
-# CHANNEL_LAYERS = {
-#     'default': {
-#         'BACKEND': 'channels_redis.core.RedisChannelLayer',
-#         'CONFIG': {
-#             "hosts": [("127.0.0.1", 6379)], 
-#         },
-#     },
-# }
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [("127.0.0.1", 6379)], 
+        },
+    },
+}
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
@@ -191,3 +196,6 @@ AUTH_USER_MODEL = 'user.UserAccount'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+USE_TZ = True  
+TIME_ZONE = 'Asia/Kathmandu'
