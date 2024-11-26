@@ -6,26 +6,30 @@ import ProductModal from './ProductModal';
 import { defaultComments } from '../defaultComment';
 import CommentSection from './CommentSection';
 
+const BASE_URL = 'http://127.0.1:8000';
 
-export default function Feed() {
-    const [products, setProducts] = useState([]);
+export default function Feed({ initialProducts = [] }) {
+    const [products, setProducts] = useState(initialProducts);
     const [showMore, setShowMore] = useState({});
     const [modalOpen, setModalOpen] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState(null);
 
     useEffect(() => {
-        const fetchProducts = async () => {
-            try {
-                const response = await fetch('http://127.0.1:8000/api/products/listallproduct/');
-                const data = await response.json();
-                setProducts(data.results);
-            } catch (error) {
-                console.error('Error fetching products:', error);
-            }
-        };
-
-        fetchProducts();
-    }, []);
+        if (initialProducts.length === 0) {
+            const fetchProducts = async () => {
+                try {
+                    const response = await fetch(`${BASE_URL}/api/products/listallproduct/`);
+                    const data = await response.json();
+                    setProducts(data.results);
+                } catch (error) {
+                    console.error('Error fetching products:', error);
+                }
+            };
+            fetchProducts();
+        } else {
+            setProducts(initialProducts);
+        }
+    }, [initialProducts]);
 
     const handleOpenModal = (product) => {
         setSelectedProduct(product);
@@ -35,6 +39,13 @@ export default function Feed() {
     const handleCloseModal = () => {
         setModalOpen(false);
         setSelectedProduct(null);
+    };
+
+    const getFullImageUrl = (imagePath) => {
+        if (imagePath.startsWith('http')) {
+            return imagePath;
+        }
+        return `${BASE_URL}${imagePath}`;
     };
 
     const renderImages = (images, product) => {
@@ -51,7 +62,7 @@ export default function Feed() {
                         sx={{
                             height: '100%',
                             bgcolor: 'grey.300',
-                            backgroundImage: `url(${images[0].image})`,
+                            backgroundImage: `url(${getFullImageUrl(images[0].image)})`,
                             backgroundSize: 'cover',
                             backgroundPosition: 'center',
                         }}
@@ -69,7 +80,7 @@ export default function Feed() {
                             sx={{
                                 height: '100%',
                                 bgcolor: 'grey.300',
-                                backgroundImage: `url(${img.image})`,
+                                backgroundImage: `url(${getFullImageUrl(img.image)})`,
                                 backgroundSize: 'cover',
                                 backgroundPosition: 'center',
                             }}
@@ -85,7 +96,7 @@ export default function Feed() {
                     sx={{
                         gridRow: 'span 2',
                         bgcolor: 'grey.300',
-                        backgroundImage: `url(${images[0].image})`,
+                        backgroundImage: `url(${getFullImageUrl(images[0].image)})`,
                         backgroundSize: 'cover',
                         backgroundPosition: 'center',
                     }}
@@ -93,7 +104,7 @@ export default function Feed() {
                 <Box
                     sx={{
                         bgcolor: 'grey.300',
-                        backgroundImage: `url(${images[1].image})`,
+                        backgroundImage: `url(${getFullImageUrl(images[1].image)})`,
                         backgroundSize: 'cover',
                         backgroundPosition: 'center',
                     }}
@@ -102,7 +113,7 @@ export default function Feed() {
                     sx={{
                         position: 'relative',
                         bgcolor: 'grey.300',
-                        backgroundImage: `url(${images[2].image})`,
+                        backgroundImage: `url(${getFullImageUrl(images[2].image)})`,
                         backgroundSize: 'cover',
                         backgroundPosition: 'center',
                     }}
@@ -140,7 +151,7 @@ export default function Feed() {
         <Box>
             {products.map((product) => {
                 const { id, productname, description, purchaseyear, condition, created_at, user, images } = product;
-                const avatarSrc = user.profilephoto ? user.profilephoto : genericProfileImage;
+                const avatarSrc = user.profilephoto ? getFullImageUrl(user.profilephoto) : genericProfileImage;
 
                 return (
                     <Card
@@ -164,7 +175,7 @@ export default function Feed() {
                                     component="span"
                                     variant="caption"
                                     sx={{
-                                        fontWeight:'bold',
+                                        fontWeight: 'bold',
                                         display: 'inline-block',
                                         padding: '4px 8px',
                                         backgroundColor: '#e0e7ff',
@@ -279,9 +290,9 @@ export default function Feed() {
                     condition: selectedProduct.condition,
                     purchaseYear: selectedProduct.purchaseyear,
                     description: selectedProduct.description,
-                    images: selectedProduct.images.map(img => img.image),
+                    images: selectedProduct.images.map(img => getFullImageUrl(img.image)),
                     uploadedBy: selectedProduct.user.username,
-                    userProfilePic: selectedProduct.user.profilephoto || genericProfileImage,
+                    userProfilePic: selectedProduct.user.profilephoto ? getFullImageUrl(selectedProduct.user.profilephoto) : genericProfileImage,
                 } : null}
             />
         </Box>

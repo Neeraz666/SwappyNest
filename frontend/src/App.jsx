@@ -6,6 +6,7 @@ import Feed from "./components/Feed";
 import Profile from "./components/Profile";
 import Login from "./components/Login";
 import UploadProduct from "./components/UploadProduct";
+import SearchResult from './components/SearchedResult';
 import { AuthProvider } from "./context/authContext";
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -17,6 +18,7 @@ function App() {
           <Navbar />
           <Routes>
             <Route path="/" element={<Feed />} />
+            <Route path="/searchedresult" element={<SearchResult />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/login" element={<Login />} />
             <Route 
