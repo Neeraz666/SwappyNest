@@ -29,7 +29,7 @@ export default function Feed({ initialProducts = [] }) {
         } else {
             setProducts(initialProducts);
         }
-    }, [initialProducts, products]);
+    }, []);
 
     const handleOpenModal = (product) => {
         setSelectedProduct(product);
