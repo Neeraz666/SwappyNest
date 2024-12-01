@@ -1,4 +1,5 @@
 import React from 'react';
+import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Box, Typography } from '@mui/material';
 import Feed from './Feed';
@@ -8,6 +9,9 @@ const SearchResults = () => {
     const { results, query } = location.state || { results: [], query: '' };
     console.log("Search Results with Images:", results);
 
+    useEffect(() => {
+        window.scrollTo(0, 0);  // Scroll to the top of the page
+    }, []);
 
     return (
         <Box>

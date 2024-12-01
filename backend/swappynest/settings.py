@@ -59,6 +59,15 @@ CORS_ALLOWED_ORIGINS = [
     'http://localhost:5173',  # Include Vite's default port
 ]
 
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+
 CORS_ALLOW_CREDENTIALS = True
 
 CORS_ORIGIN_ALLOW_ALL = True

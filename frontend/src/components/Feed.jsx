@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Typography, Avatar, IconButton, TextField, Card, CardContent, CardActions } from '@mui/material';
+import { Box, Typography, IconButton, TextField, Card, CardContent, CardActions } from '@mui/material';
 import { FavoriteBorder, ChatBubbleOutline, Share } from '@mui/icons-material';
 import genericProfileImage from '../assets/profile.png';
 import ProductModal from './ProductModal';
 import { defaultComments } from '../defaultComment';
 import CommentSection from './CommentSection';
+import AvatarComponent from './AvatarComponent';
 
 const BASE_URL = 'http://127.0.1:8000';
 
@@ -188,7 +189,7 @@ export default function Feed({ initialProducts = [] }) {
                             </Box>
                             <Box display="flex" alignItems="center">
                                 <Typography variant="body2" sx={{ fontSize: '1.2rem', marginRight: 1 }}>{user.username}</Typography>
-                                <Avatar sx={{ width: 40, height: 40 }} src={avatarSrc} />
+                                <AvatarComponent src={avatarSrc} userId={user.id} />
                             </Box>
                         </Box>
 
@@ -293,6 +294,7 @@ export default function Feed({ initialProducts = [] }) {
                     images: selectedProduct.images.map(img => getFullImageUrl(img.image)),
                     uploadedBy: selectedProduct.user.username,
                     userProfilePic: selectedProduct.user.profilephoto ? getFullImageUrl(selectedProduct.user.profilephoto) : genericProfileImage,
+                    userId:selectedProduct.user.id
                 } : null}
             />
         </Box>

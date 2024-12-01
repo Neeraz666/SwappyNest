@@ -1,15 +1,34 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { AppBar, Toolbar, IconButton, InputBase, Box, Button, Avatar } from "@mui/material";
 import { Search as SearchIcon, Notifications, Add } from "@mui/icons-material";
 import { useAuth } from "../context/authContext";
 import { useNavigate } from "react-router-dom";
-
+import AvatarComponent from "./AvatarComponent";
+import genericProfileImage from '../assets/profile.png';
 import Logo from '../assets/nest-blue.svg';
+
+const BASE_URL = 'http://127.0.1:8000';
 
 const Navbar = () => {
   const { isAuth, logout, userData } = useAuth();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
+  const [avatarSrc, setAvatarSrc] = useState(genericProfileImage);
+
+  useEffect(() => {
+    if (userData?.user?.profilephoto) {
+      setAvatarSrc(getFullImageUrl(userData.user.profilephoto));
+    } else {
+      setAvatarSrc(genericProfileImage);
+    }
+  }, [userData]);
+
+  const getFullImageUrl = (imagePath) => {
+    if (imagePath.startsWith('http')) {
+      return imagePath;
+    }
+    return `${BASE_URL}${imagePath}`;
+  };
 
   const handleLogoClick = () => {
     navigate('/');
@@ -20,11 +39,11 @@ const Navbar = () => {
   };
 
   const handleSearch = async () => {
-    if (!searchQuery.trim()) return; // Prevent empty searches
+    if (!searchQuery.trim()) return;
     try {
-      const response = await fetch(`http://127.0.1:8000/api/products/search/?q=${searchQuery}`);
+      const response = await fetch(`${BASE_URL}/api/products/search/?q=${searchQuery}`);
       const data = await response.json();
-      console.log("Searched", data)
+      console.log("Searched", data);
       navigate('/searchedresult', { state: { results: data, query: searchQuery } });
     } catch (error) {
       console.error('Error during search:', error);
@@ -32,14 +51,14 @@ const Navbar = () => {
   };
 
   return (
-    <AppBar position="static" sx={{ backgroundColor: '#f9f8f6', padding: 0 }} elevation={0}>
+    <AppBar position="sticky" sx={{ backgroundColor: '#f9f8f6', padding: 0 }} elevation={0}>
       <Toolbar sx={{ maxWidth: '1400px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 0 }}>
         <Box sx={{ display: "flex", alignItems: "center" }}>
           <Box
             onClick={handleLogoClick}
             sx={{
               display: "flex",
-              marginRight:"1rem",
+              marginRight: "1rem",
               alignItems: "center",
               cursor: 'pointer',
               '&:hover': {
@@ -69,7 +88,7 @@ const Navbar = () => {
               placeholder="Search your egg..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSearch()} // Trigger search on Enter key
+              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
               sx={{
                 flex: 1,
                 height: '100%',
@@ -109,11 +128,7 @@ const Navbar = () => {
                 '&:hover': { color: 'primary.dark' }
               }}
             >
-              <Avatar
-                src={userData?.profilephoto || null}
-                alt="User Profile"
-                sx={{ height: '2rem', width: '2rem' }}
-              />
+              <AvatarComponent src={avatarSrc} userId={userData?.user.id} key={userData?.user.id} />
             </IconButton>
           )}
 

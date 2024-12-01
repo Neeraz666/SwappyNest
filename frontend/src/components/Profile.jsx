@@ -1,32 +1,217 @@
-import React from "react";
-import { Box, Typography, IconButton } from "@mui/material";
-import { Edit } from "@mui/icons-material";
-import Feed from "./Feed";
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import { Box, Container, Typography, Avatar, Button, Grid, Card, CardContent, CardMedia } from '@mui/material';
+import { Edit, Email, Person, Phone, LocationOn } from '@mui/icons-material';
+import axios from 'axios';
+import ProductModal from './ProductModal';
+import EditProfile from './EditProfile';
+import { useAuth } from '../context/authContext'; 
+import genericProfileImage from '../assets/profile.png';
 
-const Profile = () => {
+const BASE_URL = 'http://127.0.0.1:8000';
+
+export default function ProfilePage() {
+  const { userId } = useParams(); // Get userId from URL
+  const { userData } = useAuth(); // Assuming userData contains authenticated user info
+  const [user, setUser] = useState(null);
+  const [products, setProducts] = useState([]);
+  const [openEditDialog, setOpenEditDialog] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
+
+  // Fetch user data
+  const fetchUserData = async () => {
+    try {
+      const userResponse = await axios.get(`${BASE_URL}/api/user/profile/${userId}/`);
+      setUser(userResponse.data.user);
+
+      const productsResponse = await axios.get(`${BASE_URL}/api/user/${userId}/products`);
+      setProducts(productsResponse.data);
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchUserData();
+  }, [userId]);
+
+  const handleEditOpen = () => {
+    setOpenEditDialog(true);
+  };
+
+  const handleEditClose = () => {
+    setOpenEditDialog(false);
+  };
+
+  const handleProductClick = (product) => {
+    setSelectedProduct(product);
+    setModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setModalOpen(false);
+    setSelectedProduct(null);
+  };
+
+  if (!user) {
+    return <Typography>Loading...</Typography>;
+  }
+
+  // Check if the logged-in user is viewing their own profile
+  const isAuthenticatedAndOwnProfile = userData && userData.user.id === parseInt(userId);
+
   return (
-    <Box sx={{ maxWidth: '700px', margin: '0 auto', mt: 4 }}>
-      {/* User Info */}
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 3 }}>
-        <img 
-          src="/profile.jpg" 
-          alt="Profile" 
-          style={{ height: '100px', width: '100px', borderRadius: '50%', marginRight: 10 }} 
-        />
-        <Box sx={{ textAlign: 'center' }}>
-          <Typography variant="h5">John Doe</Typography>
-          <Typography variant="body2">john.doe@example.com</Typography>
-        </Box>
-        <IconButton>
-          <Edit />
-        </IconButton>
-      </Box>
-      
-      {/* User's Posts */}
-      <Typography variant="h6" sx={{ mb: 2 }}>Your Posts</Typography>
-      <Feed />
-    </Box>
-  );
-};
+    <Container maxWidth="md">
+      <Box sx={{ py: 4 }}>
+        {/* Profile Card */}
+        <Card elevation={3} sx={{ mb: 4, overflow: 'hidden' }}>
+          <Box
+            sx={{
+              height: 200,
+              bgcolor: 'primary.main',
+              position: 'relative',
+              backgroundImage: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
+            }}
+          >
+            <Avatar
+              src={user.profilephoto ? `${BASE_URL}${user.profilephoto}` :genericProfileImage}
+              alt={`${user.firstname} ${user.lastname}`}
+              sx={{
+                width: 150,
+                height: 150,
+                border: '5px solid white',
+                position: 'absolute',
+                bottom: -75,
+                left: 50,
+              }}
+            />
+          </Box>
+          <Box sx={{ mt: 10, p: 3 }}>
+            <Grid container spacing={3}>
+              <Grid item xs={12} md={8}>
+                <Typography variant="h4" gutterBottom>
+                  {user.firstname || 'N/A'} {user.lastname || 'N/A'}
+                </Typography>
+                <Typography variant="body1" sx={{ mb: 1 }}>
+                  <Person sx={{ mr: 1, verticalAlign: 'middle' }} />
+                  {user.username || 'N/A'}
+                </Typography>
+                <Typography variant="body1" sx={{ mb: 1 }}>
+                  <Email sx={{ mr: 1, verticalAlign: 'middle' }} />
+                  {user.email || 'N/A'}
+                </Typography>
+                <Typography variant="body1" sx={{ mb: 1 }}>
+                  <Phone sx={{ mr: 1, verticalAlign: 'middle' }} />
+                  {user.phone || 'N/A'}
+                </Typography>
+                <Typography variant="body1" sx={{ mb: 2 }}>
+                  <LocationOn sx={{ mr: 1, verticalAlign: 'middle' }} />
+                  {user.address || 'N/A'}
+                </Typography>
+              </Grid>
+              <Grid
+                item
+                xs={12}
+                md={4}
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'flex-end',
+                  alignItems: 'flex-start',
+                }}
+              >
+                {isAuthenticatedAndOwnProfile && (
+                  <Button variant="contained" startIcon={<Edit />} onClick={handleEditOpen}>
+                    Edit Profile
+                  </Button>
+                )}
+              </Grid>
+            </Grid>
+          </Box>
+        </Card>
 
-export default Profile;
+        {/* Products Section */}
+        <Typography variant="h5" gutterBottom sx={{ mb: 3 }}>
+          My Products
+        </Typography>
+        <Grid container spacing={3}>
+          {products.map((product) => (
+            <Grid item xs={12} sm={6} md={4} key={product.id}>
+              <Card
+                onClick={() => handleProductClick(product)}
+                sx={{
+                  cursor: 'pointer',
+                  height: '100%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  '&:hover': {
+                    boxShadow: 6,
+                  },
+                }}
+              >
+                <CardMedia
+                  component="img"
+                  height="200"
+                  image={
+                    product.images[0]
+                      ? `${BASE_URL}${product.images[0].image}`
+                      : '/placeholder.svg?height=200&width=250'
+                  }
+                  alt={product.productname}
+                />
+                <CardContent
+                  sx={{
+                    flexGrow: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    p: 2,
+                  }}
+                >
+                  <Typography gutterBottom variant="h6" component="div" sx={{ mb: 0 }}>
+                    {product.productname}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {product.condition} • {product.purchaseyear}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+      </Box>
+
+      <EditProfile
+        open={openEditDialog}
+        onClose={handleEditClose}
+        onProfileUpdated={() => {
+          setOpenEditDialog(false);
+          fetchUserData(); // Refresh user data after successful update
+        }}
+      />
+
+      {/* Product Modal */}
+      <ProductModal
+        open={modalOpen}
+        onClose={handleCloseModal}
+        product={
+          selectedProduct
+            ? {
+                name: selectedProduct.productname,
+                uploadDate: selectedProduct.created_at,
+                condition: selectedProduct.condition,
+                purchaseYear: selectedProduct.purchaseyear,
+                description: selectedProduct.description,
+                images: selectedProduct.images.map((img) => `${BASE_URL}${img.image}`),
+                uploadedBy: user.username,
+                userId:user.id,
+                userProfilePic: user.profilephoto
+                  ? `${BASE_URL}${user.profilephoto}`
+                  : '/placeholder.svg?height=40&width=40',
+              }
+            : null
+        }
+      />
+    </Container>
+  );
+}
