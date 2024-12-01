@@ -14,8 +14,9 @@ import {
 import { FavoriteBorder, Share } from '@mui/icons-material';
 import Carousel from "react-multi-carousel";
 import "react-multi-carousel/lib/styles.css";
-import { defaultComments } from '../defaultComment';  // Default comments import
-import CommentSection from './CommentSection'; // Import the CommentSection component
+import { defaultComments } from '../defaultComment'; 
+import CommentSection from './CommentSection';
+import AvatarComponent from './AvatarComponent';
 
 export default function ProductModal({ open, onClose, product }) {
   const [tabValue, setTabValue] = useState(0);
@@ -115,6 +116,7 @@ export default function ProductModal({ open, onClose, product }) {
   if (!product) {
     return null; // or return a loading indicator, or an error message
   }
+  console.log(product)
 
   return (
     <Dialog
@@ -210,7 +212,8 @@ export default function ProductModal({ open, onClose, product }) {
               <Typography variant="body2" color="text.secondary">
                 Uploaded By: {product.uploadedBy || 'Not Provided'}
               </Typography>
-              <Avatar sx={{ width: 40, height: 40 }} src={product.userProfilePic} />
+       
+              <AvatarComponent src={product.userProfilePic} userId={product.userId} />
             </Box>
           </Grid>
         </Grid>

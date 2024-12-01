@@ -1,18 +1,22 @@
-from rest_framework import permissions
+from rest_framework import permissions, status
+from django.shortcuts import get_object_or_404
+from django.core.files.storage import default_storage
+from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.views import APIView
 from rest_framework.generics import RetrieveAPIView
 from rest_framework.response import Response
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, PermissionDenied
 from .serializers import UserSerializer
+from products.models import Product
+from  products.serializers import ProductSerializer
 
 User = get_user_model()
 
 # Create your views here.
 class SignUpView(APIView):
     permission_classes = (permissions.AllowAny, )
-
     def post(self, request, format=None):
         data = self.request.data
 
@@ -47,10 +51,69 @@ class SignUpView(APIView):
             return Response({'error': 'Passwords donot match! Try again.'})
 
 
-class UserDetail(RetrieveAPIView):
-    permission_classes = [permissions.IsAuthenticated]
-    serializer_class = UserSerializer
+
+
+class UserDetail(APIView):
+    """
+    Allow any user to view a profile.
+    Only the profile owner can edit their profile.
+    """
+    permission_classes = [permissions.AllowAny]  # Anyone can access the view for GET
+    parser_classes = (MultiPartParser, FormParser)  # Added to handle file uploads
 
     def get_object(self):
-        return self.request.user
+        user_id = self.kwargs.get('id')  # Get the user ID from the URL
+        return get_object_or_404(User, id=user_id)  # Return 404 if user doesn't exist
+
+    def get(self, request, *args, **kwargs):
+        """
+        Handle GET requests to retrieve user details.
+        """
+        user = self.get_object()
+        serializer = UserSerializer(user)
+        return Response({"user": serializer.data}, status=status.HTTP_200_OK)
+
+    def put(self, request, *args, **kwargs):
+        user = self.get_object()
+
+        if not request.user.is_authenticated or request.user != user:
+            raise PermissionDenied("You are not allowed to update this profile.")
+
+        remove_profilephoto = request.data.get('remove_profilephoto', 'false') == 'true'
+        profilephoto = request.data.get('profilephoto', None)
+
+        if remove_profilephoto and not profilephoto:  # Remove only if no new photo is provided
+            if user.profilephoto:
+                try:
+                    file_path = user.profilephoto.path
+                    if default_storage.exists(file_path):
+                        default_storage.delete(file_path)
+                    user.profilephoto = None
+                except Exception as e:
+                    return Response({"message": f"Error deleting file: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        serializer = UserSerializer(user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     
+class UserProductsView(APIView):
+    """
+    Retrieve all products associated with a user, identified by their username.
+    """
+    permission_classes = [] 
+
+    def get(self, request, id):
+        # Retrieve the user object based on the id
+        user = get_object_or_404(User, id=id)
+        
+        # Query products belonging to this user
+        products = Product.objects.filter(user=user)
+        
+        # Serialize the products
+        serializer = ProductSerializer(products, many=True)
+        
+        return Response(serializer.data, status=status.HTTP_200_OK)

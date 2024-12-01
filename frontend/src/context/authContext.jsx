@@ -43,9 +43,16 @@ export const AuthProvider = ({ children }) => {
 
   const fetchUserData = async () => {
     try {
-      const response = await axios.get('http://127.0.0.1:8000/api/user/profile', {
+      const accessToken = localStorage.getItem('access_token');
+      if (!accessToken) throw new Error('No access token found');
+
+      // Decode the token to get the user_id
+      const decoded = JSON.parse(atob(accessToken.split('.')[1]));
+      const userId = decoded.user_id;
+
+      const response = await axios.get(`http://127.0.0.1:8000/api/user/profile/${userId}/`, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       });
       console.log("Fetched User Data:", response.data);
@@ -105,8 +112,9 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ isAuth, login, logout, userData, loading }}>
+    <AuthContext.Provider value={{fetchUserData, isAuth, login, logout, userData, loading}}>
       {children}
     </AuthContext.Provider>
   );
 };
+

@@ -1,14 +1,34 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { AppBar, Toolbar, IconButton, InputBase, Box, Button, Avatar } from "@mui/material";
 import { Search as SearchIcon, Notifications, Add } from "@mui/icons-material";
 import { useAuth } from "../context/authContext";
 import { useNavigate } from "react-router-dom";
-
+import AvatarComponent from "./AvatarComponent";
+import genericProfileImage from '../assets/profile.png';
 import Logo from '../assets/nest-blue.svg';
+
+const BASE_URL = 'http://127.0.1:8000';
 
 const Navbar = () => {
   const { isAuth, logout, userData } = useAuth();
   const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [avatarSrc, setAvatarSrc] = useState(genericProfileImage);
+
+  useEffect(() => {
+    if (userData?.user?.profilephoto) {
+      setAvatarSrc(getFullImageUrl(userData.user.profilephoto));
+    } else {
+      setAvatarSrc(genericProfileImage);
+    }
+  }, [userData]);
+
+  const getFullImageUrl = (imagePath) => {
+    if (imagePath.startsWith('http')) {
+      return imagePath;
+    }
+    return `${BASE_URL}${imagePath}`;
+  };
 
   const handleLogoClick = () => {
     navigate('/');
@@ -18,13 +38,40 @@ const Navbar = () => {
     navigate('/upload');
   };
 
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) return;
+    try {
+      const response = await fetch(`${BASE_URL}/api/products/search/?q=${searchQuery}`);
+      const data = await response.json();
+      console.log("Searched", data);
+      navigate('/searchedresult', { state: { results: data, query: searchQuery } });
+    } catch (error) {
+      console.error('Error during search:', error);
+    }
+  };
+
   return (
-    <AppBar position="static" sx={{ backgroundColor: '#f9f8f6', padding: 0 }} elevation={0}>
+    <AppBar position="sticky" sx={{ backgroundColor: '#f9f8f6', padding: 0 }} elevation={0}>
       <Toolbar sx={{ maxWidth: '1400px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 0 }}>
         <Box sx={{ display: "flex", alignItems: "center" }}>
-          <IconButton onClick={handleLogoClick} sx={{ display: "flex", alignItems: "center" }}>
-            <img src={Logo} alt="Swappy Nest Logo" style={{ height: '5rem', marginRight: '10px' }} />
-          </IconButton>
+          <Box
+            onClick={handleLogoClick}
+            sx={{
+              display: "flex",
+              marginRight: "1rem",
+              alignItems: "center",
+              cursor: 'pointer',
+              '&:hover': {
+                opacity: 0.8,
+              },
+            }}
+          >
+            <img
+              src={Logo}
+              alt="Swappy Nest Logo"
+              style={{ height: '6rem' }}
+            />
+          </Box>
 
           <Box sx={{
             display: 'flex',
@@ -39,6 +86,9 @@ const Navbar = () => {
             <SearchIcon sx={{ color: '#727271', marginRight: 1, height: '1.5rem', width: '1.5rem' }} />
             <InputBase
               placeholder="Search your egg..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
               sx={{
                 flex: 1,
                 height: '100%',
@@ -56,7 +106,7 @@ const Navbar = () => {
               width: "4rem",
               "&:hover": { color: "primary.dark" },
             }}
-            onClick={handleUploadProduct} // Attach the handleClick function
+            onClick={handleUploadProduct}
           >
             <Add sx={{ height: "2rem", width: "2rem" }} />
           </IconButton>
@@ -70,7 +120,6 @@ const Navbar = () => {
             <Notifications sx={{ height: '2rem', width: '2rem' }} />
           </IconButton>
 
-          {/* Conditionally render the avatar icon with profile photo or generic icon */}
           {isAuth && (
             <IconButton
               sx={{
@@ -79,15 +128,10 @@ const Navbar = () => {
                 '&:hover': { color: 'primary.dark' }
               }}
             >
-              <Avatar
-                src={userData?.profilephoto || null}
-                alt="User Profile"
-                sx={{ height: '2rem', width: '2rem' }}
-              />
+              <AvatarComponent src={avatarSrc} userId={userData?.user.id} key={userData?.user.id} />
             </IconButton>
           )}
 
-          {/* Logout / Login Button */}
           <Button
             variant="contained"
             color="primary"
