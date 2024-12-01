@@ -112,8 +112,5 @@ class ProductSearchView(ListAPIView):
         Computes cosine similarity between two vectors.
         """
         return cosine_similarity(vec1, vec2)[0][0]
-<<<<<<< HEAD
     
 
-=======
->>>>>>> 9a2b661b795d67a2ad4e72bd306024b151bca721
