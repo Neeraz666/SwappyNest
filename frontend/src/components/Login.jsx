@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TextField, Button, IconButton, Checkbox, Typography, Container, Box, Link } from '@mui/material';
+import { TextField, Button, IconButton, Checkbox, Typography, Container, Box, Link, Alert } from '@mui/material';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import axios from 'axios';
 import { useAuth } from '../context/authContext';
@@ -14,9 +14,11 @@ export const Login = () => {
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
   const [profilephoto, setProfilephoto] = useState(null);
-  const [preview, setPreview] = useState(null); // New preview state
+  const [preview, setPreview] = useState(null);
   const [password, setPassword] = useState('');
   const [password1, setPassword1] = useState('');
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const { login } = useAuth();
 
@@ -24,29 +26,35 @@ export const Login = () => {
     const file = e.target.files[0];
     setProfilephoto(file);
 
-    // Set preview URL for selected image
     if (file) {
       setPreview(URL.createObjectURL(file));
     } else {
-      setPreview(null); // Reset preview if no file is selected
+      setPreview(null);
     }
   };
 
   const submitLogin = async (e) => {
     e.preventDefault();
+    setError('');
+    setIsLoading(true);
     try {
       await login(email, password);
     } catch (error) {
       console.error('Error during login:', error);
-      alert('Login failed. Please check your credentials and try again.');
+      setError('Login failed. Please check your credentials and try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const submitSignup = async (e) => {
     e.preventDefault();
+    setError('');
+    setIsLoading(true);
 
     if (password !== password1) {
-      alert('Passwords do not match!');
+      setError('Passwords do not match!');
+      setIsLoading(false);
       return;
     }
 
@@ -68,18 +76,22 @@ export const Login = () => {
         },
       });
       setIsLoginForm(true);
+      setError('');
     } catch (error) {
       if (error.response && error.response.data) {
-        alert(error.response.data.error || error.response.data);
+        setError(error.response.data.error || JSON.stringify(error.response.data));
       } else {
         console.error('Error signing up:', error);
-        alert('An error occurred while signing up. Please try again.');
+        setError('An error occurred while signing up. Please try again.');
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const toggleForm = () => {
     setIsLoginForm(!isLoginForm);
+    setError('');
   };
 
   const togglePasswordVisibility = () => {
@@ -98,6 +110,11 @@ export const Login = () => {
           {isLoginForm ? 'Login' : 'Signup'}
         </Typography>
         <form onSubmit={isLoginForm ? submitLogin : submitSignup}>
+          {error && (
+            <Alert severity="error" sx={{ mt: 2, mb: 2 }}>
+              {error}
+            </Alert>
+          )}
           <TextField
             label="Email"
             variant="outlined"
@@ -163,7 +180,6 @@ export const Login = () => {
                 <input type="file" hidden onChange={handleFileChange} />
               </Button>
 
-              {/* Display the preview image if a file is selected */}
               {preview && (
                 <Box mt={2} display="flex" justifyContent="center">
                   <img
@@ -186,7 +202,10 @@ export const Login = () => {
             onChange={(e) => setPassword(e.target.value)}
             InputProps={{
               endAdornment: (
-                <IconButton onClick={togglePasswordVisibility}>
+                <IconButton
+                  onClick={togglePasswordVisibility}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
                   {showPassword ? <Visibility /> : <VisibilityOff />}
                 </IconButton>
               ),
@@ -204,7 +223,10 @@ export const Login = () => {
               onChange={(e) => setPassword1(e.target.value)}
               InputProps={{
                 endAdornment: (
-                  <IconButton onClick={togglePasswordVisibility}>
+                  <IconButton
+                    onClick={togglePasswordVisibility}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
                     {showPassword ? <Visibility /> : <VisibilityOff />}
                   </IconButton>
                 ),
@@ -227,9 +249,10 @@ export const Login = () => {
             fullWidth
             variant="contained"
             color="primary"
+            disabled={isLoading}
             sx={{ mt: 2 }}
           >
-            {isLoginForm ? 'Login Now' : 'Signup Now'}
+            {isLoading ? 'Processing...' : (isLoginForm ? 'Login Now' : 'Signup Now')}
           </Button>
           <Box mt={2} textAlign="center">
             <Typography variant="body2">
@@ -237,9 +260,9 @@ export const Login = () => {
                 ? "Don't have an account? "
                 : 'Already have an account? '}
               <Link
-                href="#"
-                onClick={toggleForm}
+                component="button"
                 variant="body2"
+                onClick={toggleForm}
                 sx={{ cursor: 'pointer' }}
               >
                 {isLoginForm ? 'Signup' : 'Login'}

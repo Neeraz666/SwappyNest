@@ -3,27 +3,26 @@ import { useParams } from 'react-router-dom';
 import { Box, Container, Typography, Avatar, Button, Grid, Card, CardContent, CardMedia } from '@mui/material';
 import { Edit, Email, Person, Phone, LocationOn } from '@mui/icons-material';
 import axios from 'axios';
-import ProductModal from './ProductModal';
+import ProductModal from '../components/ProductModal';
 import EditProfile from './EditProfile';
 import { useAuth } from '../context/authContext'; 
 import genericProfileImage from '../assets/profile.png';
 
 const BASE_URL = 'http://127.0.0.1:8000';
 
-export default function ProfilePage() {
-  const { userId } = useParams(); // Get userId from URL
-  const { userData } = useAuth(); // Assuming userData contains authenticated user info
+export default function Profile() {
+  const { userId } = useParams();
+  const { userData, fetchUserData } = useAuth();
   const [user, setUser] = useState(null);
   const [products, setProducts] = useState([]);
   const [openEditDialog, setOpenEditDialog] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
 
-  // Fetch user data
-  const fetchUserData = async () => {
+  const loadProfileData = async () => {
     try {
-      const userResponse = await axios.get(`${BASE_URL}/api/user/profile/${userId}/`);
-      setUser(userResponse.data.user);
+      const user = await fetchUserData(userId);
+      setUser(user);
 
       const productsResponse = await axios.get(`${BASE_URL}/api/user/${userId}/products`);
       setProducts(productsResponse.data);
@@ -58,13 +57,11 @@ export default function ProfilePage() {
     return <Typography>Loading...</Typography>;
   }
 
-  // Check if the logged-in user is viewing their own profile
-  const isAuthenticatedAndOwnProfile = userData && userData.user.id === parseInt(userId);
+  const isAuthenticatedAndOwnProfile = userData && userData.id === parseInt(userId);
 
   return (
     <Container maxWidth="md">
       <Box sx={{ py: 4 }}>
-        {/* Profile Card */}
         <Card elevation={3} sx={{ mb: 4, overflow: 'hidden' }}>
           <Box
             sx={{
@@ -130,7 +127,6 @@ export default function ProfilePage() {
           </Box>
         </Card>
 
-        {/* Products Section */}
         <Typography variant="h5" gutterBottom sx={{ mb: 3 }}>
           My Products
         </Typography>
@@ -186,11 +182,10 @@ export default function ProfilePage() {
         onClose={handleEditClose}
         onProfileUpdated={() => {
           setOpenEditDialog(false);
-          fetchUserData(); // Refresh user data after successful update
+          loadProfileData();
         }}
       />
 
-      {/* Product Modal */}
       <ProductModal
         open={modalOpen}
         onClose={handleCloseModal}

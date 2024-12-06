@@ -3,31 +3,44 @@ import { AppBar, Toolbar, IconButton, InputBase, Box, Button, Avatar } from "@mu
 import { Search as SearchIcon, Notifications, Add } from "@mui/icons-material";
 import { useAuth } from "../context/authContext";
 import { useNavigate } from "react-router-dom";
-import AvatarComponent from "./AvatarComponent";
-import genericProfileImage from '../assets/profile.png';
 import Logo from '../assets/nest-blue.svg';
+import genericProfileImage from '../assets/profile.png';
 
 const BASE_URL = 'http://127.0.1:8000';
 
 const Navbar = () => {
-  const { isAuth, logout, userData } = useAuth();
+  const { isAuth, logout, userData, fetchUserData } = useAuth();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [avatarSrc, setAvatarSrc] = useState(genericProfileImage);
 
   useEffect(() => {
-    if (userData?.user?.profilephoto) {
-      setAvatarSrc(getFullImageUrl(userData.user.profilephoto));
-    } else {
-      setAvatarSrc(genericProfileImage);
-    }
-  }, [userData]);
+    const loadUserData = async () => {
+      try {
+        if (isAuth) {
+          const data = await fetchUserData();
+          if (data?.profilephoto) {
+            setAvatarSrc(getFullImageUrl(data.profilephoto));
+          } else {
+            setAvatarSrc(genericProfileImage);
+          }
+        } else {
+          setAvatarSrc(genericProfileImage);
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+        setAvatarSrc(genericProfileImage);
+      }
+    };
+
+    loadUserData();
+  }, [isAuth, fetchUserData]);
 
   const getFullImageUrl = (imagePath) => {
     if (imagePath.startsWith('http')) {
       return imagePath;
     }
-    return `${BASE_URL}${imagePath}`;
+    return `${BASE_URL}${imagePath}?${new Date().getTime()}`;
   };
 
   const handleLogoClick = () => {
@@ -47,6 +60,12 @@ const Navbar = () => {
       navigate('/searchedresult', { state: { results: data, query: searchQuery } });
     } catch (error) {
       console.error('Error during search:', error);
+    }
+  };
+
+  const handleProfileClick = () => {
+    if (isAuth && userData?.id) {
+      navigate(`/profile/${userData.id}`);
     }
   };
 
@@ -122,13 +141,18 @@ const Navbar = () => {
 
           {isAuth && (
             <IconButton
+              onClick={handleProfileClick}
               sx={{
                 height: '4rem',
                 width: '4rem',
                 '&:hover': { color: 'primary.dark' }
               }}
             >
-              <AvatarComponent src={avatarSrc} userId={userData?.user.id} key={userData?.user.id} />
+              <Avatar
+                src={avatarSrc}
+                alt={userData?.username || "User"}
+                sx={{ width: '3rem', height: '3rem' }}
+              />
             </IconButton>
           )}
 
@@ -151,3 +175,4 @@ const Navbar = () => {
 };
 
 export default Navbar;
+
