@@ -6,81 +6,112 @@ const BASE_URL = 'http://127.0.0.1:8000';
 
 const AuthContext = createContext();
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
 
 export const AuthProvider = ({ children }) => {
   const [isAuth, setIsAuth] = useState(false);
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  // Helper functions for token management
-  const getAccessToken = () => localStorage.getItem('access_token');
+  const getAccessToken = () => {
+    const token = localStorage.getItem('access_token');
+    console.log('Retrieved access token:', token);
+    return token;
+  };
+
   const getRefreshToken = () => localStorage.getItem('refresh_token');
+
   const setTokens = (access, refresh) => {
+    console.log('Setting tokens:', { access, refresh });
     localStorage.setItem('access_token', access);
     localStorage.setItem('refresh_token', refresh);
   };
+
   const clearTokens = () => {
+    console.log('Clearing tokens');
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
   };
 
-  // Check if token is expired
   const isTokenExpired = (token) => {
-    if (!token) return true;
+    if (!token) {
+      console.log('Token is null or undefined');
+      return true;
+    }
     try {
       const decoded = JSON.parse(atob(token.split('.')[1]));
       const currentTime = Math.floor(Date.now() / 1000);
-      return decoded.exp < currentTime;
+      const isExpired = decoded.exp < currentTime;
+      console.log('Token expiration check:', { isExpired, exp: decoded.exp, currentTime });
+      return isExpired;
     } catch (error) {
       console.error('Error decoding token:', error);
-      return true; // Treat malformed tokens as expired
+      return true;
     }
   };
 
-  // Fetch user data
-  const fetchUserData = async () => {
+
+  const fetchUserData = async (userId = null) => {
     try {
       const accessToken = getAccessToken();
-      if (!accessToken) throw new Error('No access token found');
-
-      const decoded = JSON.parse(atob(accessToken.split('.')[1]));
-      const userId = decoded.user_id;
-
+  
+      if (!userId && accessToken) {
+        const decoded = JSON.parse(atob(accessToken.split('.')[1]));
+        userId = decoded.user_id;
+      }
+  
       const response = await axios.get(`${BASE_URL}/api/user/profile/${userId}/`, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
+        headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
       });
+  
       console.log("Fetched User Data:", response.data);
-      setUserData(response.data);
+      return response.data;
     } catch (error) {
       console.error('Failed to fetch user data:', error);
-      setIsAuth(false); // Ensure auth state is reset on failure
-      clearTokens(); // Clear invalid tokens
+      setError('Failed to fetch user data. Please try logging in again.');
+      throw error;
     }
   };
-
-  // Login function
+  
   const login = async (email, password) => {
+    setError(null);
     try {
+      console.log('Attempting login with:', { email });
       const response = await axios.post(`${BASE_URL}/api/token/`, { email, password });
+      console.log('Login response:', response.data);
+
       const { access, refresh } = response.data;
 
       setTokens(access, refresh);
       axios.defaults.headers.common['Authorization'] = `Bearer ${access}`;
 
       setIsAuth(true);
-      await fetchUserData();
+      const userData = await fetchUserData();
+      setUserData(userData);
       navigate('/');
     } catch (error) {
       console.error('Login error:', error);
-      alert('Login failed. Please check your credentials.');
+      if (error.response) {
+        console.log('Error response:', error.response.data);
+        setError(`Login failed: ${error.response.data.detail || 'Please check your credentials.'}`);
+      } else if (error.request) {
+        console.log('Error request:', error.request);
+        setError('No response received from the server. Please try again.');
+      } else {
+        setError('An unexpected error occurred. Please try again.');
+      }
+      throw error;
     }
   };
 
-  // Logout function
   const logout = async () => {
     try {
       const accessToken = getAccessToken();
@@ -104,22 +135,32 @@ export const AuthProvider = ({ children }) => {
       navigate('/');
     } catch (error) {
       console.error('Logout error:', error);
-      alert('There was an issue logging out. Please try again.');
+      setError('There was an issue logging out. Please try again.');
     }
   };
 
-  // Check authentication on mount
+  const updateUserData = (newData) => {
+    setUserData((prevData) => ({ ...prevData, ...newData }));
+  };
+
   useEffect(() => {
     const checkAuth = async () => {
       const accessToken = getAccessToken();
       console.log("Access Token:", accessToken);
       if (accessToken && !isTokenExpired(accessToken)) {
         setIsAuth(true);
-        await fetchUserData();
-        axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+        try {
+          const userData = await fetchUserData();
+          setUserData(userData);
+          axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+        } catch (error) {
+          console.error('Error fetching user data during auth check:', error);
+          clearTokens();
+          setIsAuth(false);
+        }
       } else {
         console.log("Token expired or missing.");
-        clearTokens(); // Clear invalid tokens
+        clearTokens();
       }
       setLoading(false);
     };
@@ -127,9 +168,17 @@ export const AuthProvider = ({ children }) => {
     checkAuth();
   }, []);
 
-  return (
-    <AuthContext.Provider value={{ fetchUserData, isAuth, login, logout, userData, loading }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  const value = {
+    isAuth,
+    login,
+    logout,
+    userData,
+    loading,
+    error,
+    updateUserData,
+    fetchUserData
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
+
