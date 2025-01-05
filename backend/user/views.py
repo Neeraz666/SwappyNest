@@ -71,7 +71,8 @@ class UserDetail(APIView):
         """
         user = self.get_object()
         serializer = UserSerializer(user)
-        return Response({"user": serializer.data}, status=status.HTTP_200_OK)
+        # Return the serialized data directly without the "user" key
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def put(self, request, *args, **kwargs):
         user = self.get_object()
@@ -98,7 +99,6 @@ class UserDetail(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
     
 class UserProductsView(APIView):
     """
