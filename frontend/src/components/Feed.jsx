@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Box, Typography, IconButton, TextField, Card, CardContent, CardActions } from '@mui/material';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
+import { Box, Typography, IconButton, TextField, Card, CardContent, CardActions, CircularProgress } from '@mui/material';
 import { FavoriteBorder, ChatBubbleOutline, Share } from '@mui/icons-material';
 import genericProfileImage from '../assets/profile.png';
 import ProductModal from './ProductModal';
@@ -14,23 +14,64 @@ export default function Feed({ initialProducts = [] }) {
     const [showMore, setShowMore] = useState({});
     const [modalOpen, setModalOpen] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [hasMore, setHasMore] = useState(true);
+    const [page, setPage] = useState(1);
+    const loader = useRef(null);
+    const initialFetchDone = useRef(false);
+
+    const fetchProducts = useCallback(async () => {
+        if (loading || !hasMore) return;
+        setLoading(true);
+        try {
+            const response = await fetch(`${BASE_URL}/api/products/listallproduct/?page=${page}`);
+            const data = await response.json();
+            if (data.results && data.results.length > 0) {
+                setProducts(prevProducts => {
+                    const newProducts = data.results.filter(newProduct => 
+                        !prevProducts.some(existingProduct => existingProduct.id === newProduct.id)
+                    );
+                    return [...prevProducts, ...newProducts];
+                });
+                setPage(prevPage => prevPage + 1);
+                setHasMore(!!data.next);
+            } else {
+                setHasMore(false);
+            }
+        } catch (error) {
+            console.error('Error fetching products:', error);
+        } finally {
+            setLoading(false);
+        }
+    }, [page, loading, hasMore]);
 
     useEffect(() => {
-        if (initialProducts.length === 0) {
-            const fetchProducts = async () => {
-                try {
-                    const response = await fetch(`${BASE_URL}/api/products/listallproduct/`);
-                    const data = await response.json();
-                    setProducts(data.results);
-                } catch (error) {
-                    console.error('Error fetching products:', error);
-                }
-            };
+        if (initialProducts.length === 0 && !initialFetchDone.current) {
             fetchProducts();
-        } else {
-            setProducts(initialProducts);
+            initialFetchDone.current = true;
         }
-    }, []);
+    }, [fetchProducts, initialProducts]);
+
+    const handleObserver = useCallback((entries) => {
+        const target = entries[0];
+        if (target.isIntersecting && !loading && hasMore) {
+            fetchProducts();
+        }
+    }, [fetchProducts, loading, hasMore]);
+
+    useEffect(() => {
+        const option = {
+            root: null,
+            rootMargin: "20px",
+            threshold: 1.0
+        };
+        const observer = new IntersectionObserver(handleObserver, option);
+        if (loader.current) observer.observe(loader.current);
+        
+        return () => {
+            if (loader.current) observer.unobserve(loader.current);
+        }
+    }, [handleObserver]);
 
     const handleOpenModal = (product) => {
         setSelectedProduct(product);
@@ -282,6 +323,19 @@ export default function Feed({ initialProducts = [] }) {
                     </Card>
                 );
             })}
+            {loading && (
+                <Box sx={{ display: 'flex', justifyContent: 'center', my: 2 }}>
+                    <CircularProgress />
+                </Box>
+            )}
+            {!loading && hasMore && (
+                <div ref={loader} style={{ height: '20px' }} />
+            )}
+            {!hasMore && (
+                <Typography variant="body2" sx={{ textAlign: 'center', my: 2 }}>
+                    No more products to load
+                </Typography>
+            )}
             <ProductModal
                 open={modalOpen}
                 onClose={handleCloseModal}
@@ -294,9 +348,10 @@ export default function Feed({ initialProducts = [] }) {
                     images: selectedProduct.images.map(img => getFullImageUrl(img.image)),
                     uploadedBy: selectedProduct.user.username,
                     userProfilePic: selectedProduct.user.profilephoto ? getFullImageUrl(selectedProduct.user.profilephoto) : genericProfileImage,
-                    userId:selectedProduct.user.id
+                    userId: selectedProduct.user.id
                 } : null}
             />
         </Box>
     );
 }
+
