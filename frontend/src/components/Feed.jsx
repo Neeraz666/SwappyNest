@@ -24,8 +24,10 @@ export default function Feed({ initialProducts = [] }) {
         if (loading || !hasMore) return;
         setLoading(true);
         try {
+            console.log(`Fetching page: ${page}`);  // Debugging log
             const response = await fetch(`${BASE_URL}/api/products/listallproduct/?page=${page}`);
             const data = await response.json();
+            console.log(data);  // Debugging log to inspect fetched data
             if (data.results && data.results.length > 0) {
                 setProducts(prevProducts => {
                     const newProducts = data.results.filter(newProduct => 
@@ -354,4 +356,3 @@ export default function Feed({ initialProducts = [] }) {
         </Box>
     );
 }
-
