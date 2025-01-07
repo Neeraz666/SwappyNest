@@ -16,26 +16,45 @@ export default function Feed({ initialProducts = [] }) {
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [loading, setLoading] = useState(false);
     const [hasMore, setHasMore] = useState(true);
-    const [page, setPage] = useState(1);
+    const [nextPageUrl, setNextPageUrl] = useState(null);
     const loader = useRef(null);
-    const initialFetchDone = useRef(false);
+    const observer = useRef(null);
+
+    console.log('Feed component rendered. Products:', products.length, 'NextPageUrl:', nextPageUrl, 'HasMore:', hasMore, 'Loading:', loading);
+
+    const lastProductElementRef = useCallback(node => {
+        if (loading) return;
+        if (observer.current) observer.current.disconnect();
+        observer.current = new IntersectionObserver(entries => {
+            if (entries[0].isIntersecting && hasMore) {
+                console.log('Last product is visible, fetching more products');
+                fetchProducts();
+            }
+        });
+        if (node) observer.current.observe(node);
+    }, [loading, hasMore]);
 
     const fetchProducts = useCallback(async () => {
         if (loading || !hasMore) return;
         setLoading(true);
         try {
-            console.log(`Fetching page: ${page}`);  // Debugging log
-            const response = await fetch(`${BASE_URL}/api/products/listallproduct/?page=${page}`);
+            console.log(`Fetching products from: ${nextPageUrl || `${BASE_URL}/api/products/listallproduct/`}`);
+            const response = await fetch(nextPageUrl || `${BASE_URL}/api/products/listallproduct/`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             const data = await response.json();
-            console.log(data);  // Debugging log to inspect fetched data
+            console.log('Fetched data:', data);
+
             if (data.results && data.results.length > 0) {
                 setProducts(prevProducts => {
                     const newProducts = data.results.filter(newProduct => 
                         !prevProducts.some(existingProduct => existingProduct.id === newProduct.id)
                     );
+                    console.log(`Adding ${newProducts.length} new products`);
                     return [...prevProducts, ...newProducts];
                 });
-                setPage(prevPage => prevPage + 1);
+                setNextPageUrl(data.next);
                 setHasMore(!!data.next);
             } else {
                 setHasMore(false);
@@ -45,35 +64,15 @@ export default function Feed({ initialProducts = [] }) {
         } finally {
             setLoading(false);
         }
-    }, [page, loading, hasMore]);
+    }, [nextPageUrl, loading, hasMore]);
 
     useEffect(() => {
-        if (initialProducts.length === 0 && !initialFetchDone.current) {
+        if (initialProducts.length === 0) {
             fetchProducts();
-            initialFetchDone.current = true;
+        } else {
+            setProducts(initialProducts);
         }
-    }, [fetchProducts, initialProducts]);
-
-    const handleObserver = useCallback((entries) => {
-        const target = entries[0];
-        if (target.isIntersecting && !loading && hasMore) {
-            fetchProducts();
-        }
-    }, [fetchProducts, loading, hasMore]);
-
-    useEffect(() => {
-        const option = {
-            root: null,
-            rootMargin: "20px",
-            threshold: 1.0
-        };
-        const observer = new IntersectionObserver(handleObserver, option);
-        if (loader.current) observer.observe(loader.current);
-        
-        return () => {
-            if (loader.current) observer.unobserve(loader.current);
-        }
-    }, [handleObserver]);
+    }, []);
 
     const handleOpenModal = (product) => {
         setSelectedProduct(product);
@@ -193,13 +192,14 @@ export default function Feed({ initialProducts = [] }) {
 
     return (
         <Box>
-            {products.map((product) => {
-                const { id, productname, description, purchaseyear, condition, created_at, user, images } = product;
+            {products.map((product, index) => {
+                const { id, productname, description, purchaseyear, condition, created_at, user, images, category } = product;
                 const avatarSrc = user.profilephoto ? getFullImageUrl(user.profilephoto) : genericProfileImage;
 
                 return (
                     <Card
                         key={id}
+                        ref={index === products.length - 1 ? lastProductElementRef : null}
                         variant="outlined"
                         sx={{
                             maxWidth: '700px',
@@ -228,6 +228,21 @@ export default function Feed({ initialProducts = [] }) {
                                     }}
                                 >
                                     {condition}
+                                </Typography>
+                                <Typography
+                                    component="span"
+                                    variant="caption"
+                                    sx={{
+                                        fontWeight: 'bold',
+                                        display: 'inline-block',
+                                        padding: '4px 8px',
+                                        backgroundColor: '#ffd700',
+                                        borderRadius: '4px',
+                                        color: '#000',
+                                        marginLeft: '8px',
+                                    }}
+                                >
+                                    {category}
                                 </Typography>
                             </Box>
                             <Box display="flex" alignItems="center">
@@ -330,9 +345,6 @@ export default function Feed({ initialProducts = [] }) {
                     <CircularProgress />
                 </Box>
             )}
-            {!loading && hasMore && (
-                <div ref={loader} style={{ height: '20px' }} />
-            )}
             {!hasMore && (
                 <Typography variant="body2" sx={{ textAlign: 'center', my: 2 }}>
                     No more products to load
@@ -350,9 +362,11 @@ export default function Feed({ initialProducts = [] }) {
                     images: selectedProduct.images.map(img => getFullImageUrl(img.image)),
                     uploadedBy: selectedProduct.user.username,
                     userProfilePic: selectedProduct.user.profilephoto ? getFullImageUrl(selectedProduct.user.profilephoto) : genericProfileImage,
-                    userId: selectedProduct.user.id
+                    userId: selectedProduct.user.id,
+                    category: selectedProduct.category
                 } : null}
             />
         </Box>
     );
 }
+

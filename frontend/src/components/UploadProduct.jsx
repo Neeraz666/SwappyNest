@@ -4,12 +4,9 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/authContext";
 import axios from "axios";
 import { AddPhotoAlternate, Delete } from "@mui/icons-material";
-
-// Import choices from choices.js
 import { CONDITION_CHOICES, CATEGORY_CHOICES } from '../choices'; // adjust the path if needed
 
 const UploadProduct = () => {
-  const { isAuth } = useAuth();
   const navigate = useNavigate();
 
   // State for product form data
