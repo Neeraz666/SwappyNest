@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { AppBar, Toolbar, IconButton, InputBase, Box, Button, Avatar } from "@mui/material";
+import { AppBar, Toolbar, IconButton, InputBase, Box, Button, Avatar, Typography } from "@mui/material";
 import { Search as SearchIcon, Notifications, Add } from "@mui/icons-material";
 import { useAuth } from "../context/authContext";
 import { useNavigate } from "react-router-dom";
@@ -70,14 +70,38 @@ const Navbar = () => {
   };
 
   return (
-    <AppBar position="sticky" sx={{ backgroundColor: '#f9f8f6', padding: 0 }} elevation={0}>
-      <Toolbar sx={{ maxWidth: '1400px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 0 }}>
-        <Box sx={{ display: "flex", alignItems: "center" }}>
+    <AppBar 
+      position="sticky" 
+      sx={{ 
+        backgroundColor: '#ffffff', 
+        boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
+        '& .MuiToolbar-root': {
+          padding: 0,
+        }
+      }} 
+      elevation={0}
+    >
+      <Toolbar sx={{ 
+        width: '100%', 
+        margin: '0 auto', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'space-between', 
+        height: '80px',
+        gap: '2rem' 
+      }}>
+        {/* Logo container with exact width matching Categories */}
+        <Box sx={{ 
+          display: "flex", 
+          alignItems: "center",
+          width: '320px', 
+          flexShrink: 0,
+          pl: '1rem' // 1rem left padding as you added
+        }}>
           <Box
             onClick={handleLogoClick}
             sx={{
               display: "flex",
-              marginRight: "1rem",
               alignItems: "center",
               cursor: 'pointer',
               '&:hover': {
@@ -88,70 +112,91 @@ const Navbar = () => {
             <img
               src={Logo}
               alt="Swappy Nest Logo"
-              style={{ height: '6rem' }}
+              style={{ height: '5rem' }}
             />
-          </Box>
-
-          <Box sx={{
-            display: 'flex',
-            alignItems: 'center',
-            border: "1px solid #ccc",
-            padding: "2px 8px",
-            borderRadius: "4px",
-            height: '3rem',
-            width: '40rem',
-            mr: '5rem'
-          }}>
-            <SearchIcon sx={{ color: '#727271', marginRight: 1, height: '1.5rem', width: '1.5rem' }} />
-            <InputBase
-              placeholder="Search your egg..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-              sx={{
-                flex: 1,
-                height: '100%',
-                fontSize: '1rem',
-                minWidth: 0
-              }}
-            />
+            <Typography variant="h6" sx={{ ml: 2, fontWeight: 600, color: 'primary.main' }}>
+              Swappy Nest
+            </Typography>
           </Box>
         </Box>
 
-        <Box sx={{ display: "flex", alignItems: "center", ml: 2 }}>
+        {/* Search bar with width matching Feed cards */}
+        <Box sx={{
+          display: 'flex',
+          alignItems: 'center',
+          border: "1px solid #e0e0e0",
+          borderRadius: "24px",
+          height: '48px',
+          width: '800px', // Increased to 800px
+          backgroundColor: '#f5f5f5',
+          transition: 'all 0.3s ease',
+          '&:hover': {
+            boxShadow: '0px 0px 8px rgba(0, 0, 0, 0.1)',
+          },
+        }}>
+          <SearchIcon sx={{ color: '#757575', margin: '0 16px', height: '24px', width: '24px' }} />
+          <InputBase
+            placeholder="Search your egg..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+            sx={{
+              flex: 1,
+              height: '100%',
+              fontSize: '1rem',
+              color: '#333333',
+              '&::placeholder': {
+                color: '#757575',
+                opacity: 1,
+              },
+            }}
+          />
+        </Box>
+
+        {/* Right section */}
+        <Box sx={{ 
+          display: "flex", 
+          alignItems: "center", 
+          gap: '1rem',
+          flexShrink: 0,
+          pr: 2 
+        }}>
           <IconButton
             sx={{
-              height: "4rem",
-              width: "4rem",
-              "&:hover": { color: "primary.dark" },
+              height: "48px",
+              width: "48px",
+              backgroundColor: '#f0f0f0',
+              "&:hover": { backgroundColor: "#e0e0e0" },
             }}
             onClick={handleUploadProduct}
           >
-            <Add sx={{ height: "2rem", width: "2rem" }} />
+            <Add sx={{ height: "24px", width: "24px", color: '#333333' }} />
           </IconButton>
           <IconButton
             sx={{
-              height: '4rem',
-              width: '4rem',
-              '&:hover': { color: 'primary.dark' }
+              height: '48px',
+              width: '48px',
+              backgroundColor: '#f0f0f0',
+              '&:hover': { backgroundColor: "#e0e0e0" },
             }}
           >
-            <Notifications sx={{ height: '2rem', width: '2rem' }} />
+            <Notifications sx={{ height: '24px', width: '24px', color: '#333333' }} />
           </IconButton>
 
           {isAuth && (
             <IconButton
               onClick={handleProfileClick}
               sx={{
-                height: '4rem',
-                width: '4rem',
-                '&:hover': { color: 'primary.dark' }
+                height: '48px',
+                width: '48px',
+                padding: 0,
+                '&:hover': { opacity: 0.8 },
               }}
             >
               <Avatar
                 src={avatarSrc}
                 alt={userData?.username || "User"}
-                sx={{ width: '3rem', height: '3rem' }}
+                sx={{ width: '48px', height: '48px' }}
               />
             </IconButton>
           )}
@@ -160,9 +205,13 @@ const Navbar = () => {
             variant="contained"
             color="primary"
             sx={{
-              fontSize: '1.2rem',
-              padding: '0.5rem 1rem',
-              '&:hover': { backgroundColor: 'primary.dark' }
+              fontSize: '1rem',
+              padding: '0.5rem 1.5rem',
+              borderRadius: '24px',
+              textTransform: 'none',
+              fontWeight: 600,
+              boxShadow: 'none',
+              '&:hover': { boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)' },
             }}
             onClick={isAuth ? logout : () => navigate("/login")}
           >

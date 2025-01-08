@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { Box, Typography, IconButton, TextField, Card, CardContent, CardActions, CircularProgress } from '@mui/material';
+import { Box, Typography, IconButton, TextField, Card, CardContent, CardActions, CircularProgress, Container } from '@mui/material';
 import { FavoriteBorder, ChatBubbleOutline, Share } from '@mui/icons-material';
 import genericProfileImage from '../assets/profile.png';
 import ProductModal from './ProductModal';
@@ -191,165 +191,167 @@ export default function Feed({ initialProducts = [] }) {
     };
 
     return (
-        <Box>
-            {products.map((product, index) => {
-                const { id, productname, description, purchaseyear, condition, created_at, user, images, category } = product;
-                const avatarSrc = user.profilephoto ? getFullImageUrl(user.profilephoto) : genericProfileImage;
+        <Container maxWidth={false} sx={{ py: 4, width: '100%', maxWidth: '800px', display: 'flex', flexDirection: 'column', alignItems: 'center', px: 0 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+                {products.map((product, index) => {
+                    const { id, productname, description, purchaseyear, condition, created_at, user, images, category } = product;
+                    const avatarSrc = user.profilephoto ? getFullImageUrl(user.profilephoto) : genericProfileImage;
 
-                return (
-                    <Card
-                        key={id}
-                        ref={index === products.length - 1 ? lastProductElementRef : null}
-                        variant="outlined"
-                        sx={{
-                            maxWidth: '700px',
-                            margin: '0 auto',
-                            marginTop: '1rem',
-                            padding: 2,
-                            boxShadow: 3,
-                            border: '1px solid #ccc',
-                            borderRadius: '8px',
-                        }}
-                    >
-                        <Box display="flex" justifyContent="space-between" alignItems="center">
-                            <Box>
-                                <Typography variant="subtitle1" sx={{ fontSize: '2rem', fontWeight: 'bold' }}>{productname}</Typography>
-                                <Typography component='span' variant="caption">{created_at} | </Typography>
-                                <Typography
-                                    component="span"
-                                    variant="caption"
-                                    sx={{
-                                        fontWeight: 'bold',
-                                        display: 'inline-block',
-                                        padding: '4px 8px',
-                                        backgroundColor: '#e0e7ff',
-                                        borderRadius: '4px',
-                                        color: '#000',
-                                    }}
-                                >
-                                    {condition}
-                                </Typography>
-                                <Typography
-                                    component="span"
-                                    variant="caption"
-                                    sx={{
-                                        fontWeight: 'bold',
-                                        display: 'inline-block',
-                                        padding: '4px 8px',
-                                        backgroundColor: '#ffd700',
-                                        borderRadius: '4px',
-                                        color: '#000',
-                                        marginLeft: '8px',
-                                    }}
-                                >
-                                    {category}
-                                </Typography>
-                            </Box>
-                            <Box display="flex" alignItems="center">
-                                <Typography variant="body2" sx={{ fontSize: '1.2rem', marginRight: 1 }}>{user.username}</Typography>
-                                <AvatarComponent src={avatarSrc} userId={user.id} />
-                            </Box>
-                        </Box>
-
-                        <CardContent sx={{ paddingLeft: 0, paddingRight: 0 }}>
-                            <Typography sx={{ fontSize: '1.1rem', }} variant="body2">Year of Purchase: {purchaseyear}</Typography>
-                            <Typography variant="body2" sx={{ fontSize: '1.1rem', marginTop: 1 }}>
-                                Description: {description.length > 100
-                                    ? (showMore[id]
-                                        ? description
-                                        : description.slice(0, 100))
-                                    : description}
-                                {description.length > 100 && (
-                                    <>
-                                        {!showMore[id] && '...'}
-                                        <Typography
-                                            component="span"
-                                            variant="body2"
-                                            onClick={() => handleToggleDescription(id)}
-                                            sx={{
-                                                color: 'primary.main',
-                                                cursor: 'pointer',
-                                                '&:hover': { textDecoration: 'underline' },
-                                                marginLeft: '4px',
-                                            }}
-                                        >
-                                            {showMore[id] ? 'Show less' : 'See more'}
-                                        </Typography>
-                                    </>
-                                )}
-                            </Typography>
-                        </CardContent>
-
-                        {renderImages(images, product)}
-
-                        <CardActions
-                            disableSpacing
+                    return (
+                        <Card
+                            key={id}
+                            ref={index === products.length - 1 ? lastProductElementRef : null}
+                            variant="outlined"
                             sx={{
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                paddingY: 2,
-                                paddingLeft: 0,
-                                paddingRight: 0,
-                                marginTop: 1,
+                                width: '100%',
+                                maxWidth: '800px',
+                                padding: 2,
+                                boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
+                                border: '1px solid #e0e0e0',
+                                borderRadius: '8px',
+                                mb: 3,
                             }}
                         >
-                            <IconButton aria-label="like" sx={{ marginLeft: 0, padding: 0, '&:hover': { color: 'primary.dark' } }}>
-                                <FavoriteBorder />
-                            </IconButton>
+                            <Box display="flex" justifyContent="space-between" alignItems="center">
+                                <Box>
+                                    <Typography variant="subtitle1" sx={{ fontSize: '2rem', fontWeight: 'bold' }}>{productname}</Typography>
+                                    <Typography component='span' variant="caption">{created_at} | </Typography>
+                                    <Typography
+                                        component="span"
+                                        variant="caption"
+                                        sx={{
+                                            fontWeight: 'bold',
+                                            display: 'inline-block',
+                                            padding: '4px 8px',
+                                            backgroundColor: '#e0e7ff',
+                                            borderRadius: '4px',
+                                            color: '#000',
+                                        }}
+                                    >
+                                        {condition}
+                                    </Typography>
+                                    <Typography
+                                        component="span"
+                                        variant="caption"
+                                        sx={{
+                                            fontWeight: 'bold',
+                                            display: 'inline-block',
+                                            padding: '4px 8px',
+                                            backgroundColor: '#ffd700',
+                                            borderRadius: '4px',
+                                            color: '#000',
+                                            marginLeft: '8px',
+                                        }}
+                                    >
+                                        {category}
+                                    </Typography>
+                                </Box>
+                                <Box display="flex" alignItems="center">
+                                    <Typography variant="body2" sx={{ fontSize: '1.2rem', marginRight: 1 }}>{user.username}</Typography>
+                                    <AvatarComponent src={avatarSrc} userId={user.id} />
+                                </Box>
+                            </Box>
 
-                            <IconButton
-                                aria-label="comment"
-                                sx={{ marginLeft: 'auto', marginRight: 'auto', padding: 0, '&:hover': { color: 'primary.dark' } }}
-                                onClick={() => handleOpenModal(product)}
-                            >
-                                <ChatBubbleOutline />
-                            </IconButton>
+                            <CardContent sx={{ paddingLeft: 0, paddingRight: 0 }}>
+                                <Typography sx={{ fontSize: '1.1rem', }} variant="body2">Year of Purchase: {purchaseyear}</Typography>
+                                <Typography variant="body2" sx={{ fontSize: '1.1rem', marginTop: 1 }}>
+                                    Description: {description.length > 100
+                                        ? (showMore[id]
+                                            ? description
+                                            : description.slice(0, 100))
+                                        : description}
+                                    {description.length > 100 && (
+                                        <>
+                                            {!showMore[id] && '...'}
+                                            <Typography
+                                                component="span"
+                                                variant="body2"
+                                                onClick={() => handleToggleDescription(id)}
+                                                sx={{
+                                                    color: 'primary.main',
+                                                    cursor: 'pointer',
+                                                    '&:hover': { textDecoration: 'underline' },
+                                                    marginLeft: '4px',
+                                                }}
+                                            >
+                                                {showMore[id] ? 'Show less' : 'See more'}
+                                            </Typography>
+                                        </>
+                                    )}
+                                </Typography>
+                            </CardContent>
 
-                            <IconButton aria-label="share" sx={{ marginRight: 0, padding: 0, '&:hover': { color: 'primary.dark' } }}>
-                                <Share />
-                            </IconButton>
-                        </CardActions>
+                            {renderImages(images, product)}
 
-                        <CommentSection comments={defaultComments.slice(0, 1)} />
-
-                        <Box sx={{ marginTop: 1 }}>
-                            <TextField
-                                variant="standard"
-                                size="small"
-                                placeholder="Place your offer"
-                                fullWidth
+                            <CardActions
+                                disableSpacing
                                 sx={{
-                                    p: 1,
-                                    border: '1px solid #ccc',
-                                    borderRadius: '4px',
-                                    '& .MuiInputBase-root': {
-                                        border: 'none',
-                                    },
-                                    '& .MuiInput-underline:before': {
-                                        border: 'none',
-                                    },
-                                    '&:hover .MuiInput-underline:before': {
-                                        border: 'none',
-                                    },
-                                    '&:focus .MuiInput-underline:before': {
-                                        border: 'none',
-                                    },
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    paddingY: 2,
+                                    paddingLeft: 0,
+                                    paddingRight: 0,
+                                    marginTop: 1,
                                 }}
-                            />
-                        </Box>
-                    </Card>
-                );
-            })}
-            {loading && (
-                <Box sx={{ display: 'flex', justifyContent: 'center', my: 2 }}>
-                    <CircularProgress />
-                </Box>
-            )}
-            {!hasMore && (
-                <Typography variant="body2" sx={{ textAlign: 'center', my: 2 }}>
-                    No more products to load
-                </Typography>
-            )}
+                            >
+                                <IconButton aria-label="like" sx={{ marginLeft: 0, padding: 0, '&:hover': { color: 'primary.dark' } }}>
+                                    <FavoriteBorder />
+                                </IconButton>
+
+                                <IconButton
+                                    aria-label="comment"
+                                    sx={{ marginLeft: 'auto', marginRight: 'auto', padding: 0, '&:hover': { color: 'primary.dark' } }}
+                                    onClick={() => handleOpenModal(product)}
+                                >
+                                    <ChatBubbleOutline />
+                                </IconButton>
+
+                                <IconButton aria-label="share" sx={{ marginRight: 0, padding: 0, '&:hover': { color: 'primary.dark' } }}>
+                                    <Share />
+                                </IconButton>
+                            </CardActions>
+
+                            <CommentSection comments={defaultComments.slice(0, 1)} />
+
+                            <Box sx={{ marginTop: 1 }}>
+                                <TextField
+                                    variant="standard"
+                                    size="small"
+                                    placeholder="Place your offer"
+                                    fullWidth
+                                    sx={{
+                                        p: 1,
+                                        border: '1px solid #ccc',
+                                        borderRadius: '4px',
+                                        '& .MuiInputBase-root': {
+                                            border: 'none',
+                                        },
+                                        '& .MuiInput-underline:before': {
+                                            border: 'none',
+                                        },
+                                        '&:hover .MuiInput-underline:before': {
+                                            border: 'none',
+                                        },
+                                        '&:focus .MuiInput-underline:before': {
+                                            border: 'none',
+                                        },
+                                    }}
+                                />
+                            </Box>
+                        </Card>
+                    );
+                })}
+                {loading && (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', my: 2 }}>
+                        <CircularProgress />
+                    </Box>
+                )}
+                {!hasMore && (
+                    <Typography variant="body2" sx={{ textAlign: 'center', my: 2 }}>
+                        No more products to load
+                    </Typography>
+                )}
+            </Box>
             <ProductModal
                 open={modalOpen}
                 onClose={handleCloseModal}
@@ -366,7 +368,7 @@ export default function Feed({ initialProducts = [] }) {
                     category: selectedProduct.category
                 } : null}
             />
-        </Box>
+        </Container>
     );
 }
 
