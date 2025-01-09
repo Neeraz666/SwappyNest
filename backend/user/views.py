@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError, PermissionDenied
+from .models import UserReview
 from .serializers import UserSerializer
 from products.models import Product
 from  products.serializers import ProductSerializer
@@ -117,3 +118,30 @@ class UserProductsView(APIView):
         serializer = ProductSerializer(products, many=True)
         
         return Response(serializer.data, status=status.HTTP_200_OK)
+    
+
+
+class ReviewCreateAPIView(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def post(self, request):
+        data = request.data
+        current_user = request.user
+
+        reviewed_user = data.get('reviewed_user')
+        rating = data.get('rating')
+        content = data.get('content')
+
+        try:
+            review = UserReview.objects.create(
+                reviewed_user = reviewed_user,
+                reviewer = current_user,
+                rating = rating,
+                content = content
+            )
+
+            review.save()
+
+            return Response({'success': 'Your review has been uploaded sucessfully!'})
+        except Exception as e:
+            return Response({'error':str(e)}, status = status.HTTP_500_INTERNAL_SERVER_ERROR)
