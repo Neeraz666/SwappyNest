@@ -37,7 +37,7 @@ const Categories = () => {
               </ListItemIcon>
               <ListItemText 
                 primary={category.name} 
-                secondary={`(${category.count.toLocaleString()})`}
+                secondary={`(${category.count})`}
               />
             </ListItemButton>
           </ListItem>

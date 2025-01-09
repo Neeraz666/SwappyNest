@@ -3,8 +3,6 @@ import { Box, Typography, IconButton, TextField, Card, CardContent, CardActions,
 import { FavoriteBorder, ChatBubbleOutline, Share } from '@mui/icons-material';
 import genericProfileImage from '../assets/profile.png';
 import ProductModal from './ProductModal';
-import { defaultComments } from '../defaultComment';
-import CommentSection from './CommentSection';
 import AvatarComponent from './AvatarComponent';
 
 const BASE_URL = 'http://127.0.1:8000';
@@ -46,7 +44,7 @@ export default function Feed({ initialProducts = [] }) {
 
       if (data.results && data.results.length > 0) {
         setProducts(prevProducts => {
-          const newProducts = data.results.filter(newProduct => 
+          const newProducts = data.results.filter(newProduct =>
             !prevProducts.some(existingProduct => existingProduct.id === newProduct.id)
           );
           console.log(`Adding ${newProducts.length} new products`);
@@ -98,7 +96,7 @@ export default function Feed({ initialProducts = [] }) {
 
     if (totalImages === 1) {
       return (
-        <Box sx={{ height: 300, marginTop: 1, cursor: 'pointer' }} onClick={() => handleOpenModal(product)}>
+        <Box sx={{ height: 400, marginTop: 1, cursor: 'pointer' }} onClick={() => handleOpenModal(product)}>
           <Box
             sx={{
               height: '100%',
@@ -189,8 +187,32 @@ export default function Feed({ initialProducts = [] }) {
   };
 
   return (
-    <Container maxWidth={false} sx={{ width: '100%', maxWidth: '800px', display: 'flex', flexDirection: 'column', alignItems: 'center', px: 0 }}>
-      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, width: '100%', overflowY: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none', '&::-webkit-scrollbar': { display: 'none' } }}>
+    <Container
+      sx={{
+        width: '100%',
+        maxWidth: '800px',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        px: 0,
+        overflowY: 'auto', // Enable scrolling
+        msOverflowStyle: 'none',  // Hide scrollbar for IE and Edge
+        scrollbarWidth: 'none',   // Hide scrollbar for Firefox
+        '&::-webkit-scrollbar': {
+          display: 'none',        // Hide scrollbar for Chrome, Safari, and Opera
+        },
+      }}
+    >
+
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 3,
+          width: '100%',
+        }}
+      >
         {products.map((product, index) => {
           const { id, productname, description, purchaseyear, condition, created_at, user, images, category } = product;
           const avatarSrc = user.profilephoto ? getFullImageUrl(user.profilephoto) : genericProfileImage;
@@ -297,11 +319,11 @@ export default function Feed({ initialProducts = [] }) {
                 </IconButton>
 
                 <IconButton
-                  aria-label="comment"
+                  aria-label="place an offer"
                   sx={{ marginLeft: 'auto', marginRight: 'auto', padding: 0, '&:hover': { color: 'primary.dark' } }}
                   onClick={() => handleOpenModal(product)}
                 >
-                  <ChatBubbleOutline />
+                  <button>Place an offer</button>
                 </IconButton>
 
                 <IconButton aria-label="share" sx={{ marginRight: 0, padding: 0, '&:hover': { color: 'primary.dark' } }}>
@@ -309,33 +331,7 @@ export default function Feed({ initialProducts = [] }) {
                 </IconButton>
               </CardActions>
 
-              <CommentSection comments={defaultComments.slice(0, 1)} />
 
-              <Box sx={{ marginTop: 1 }}>
-                <TextField
-                  variant="standard"
-                  size="small"
-                  placeholder="Place your offer"
-                  fullWidth
-                  sx={{
-                    p: 1,
-                    border: '1px solid #ccc',
-                    borderRadius: '4px',
-                    '& .MuiInputBase-root': {
-                      border: 'none',
-                    },
-                    '& .MuiInput-underline:before': {
-                      border: 'none',
-                    },
-                    '&:hover .MuiInput-underline:before': {
-                      border: 'none',
-                    },
-                    '&:focus .MuiInput-underline:before': {
-                      border: 'none',
-                    },
-                  }}
-                />
-              </Box>
             </Card>
           );
         })}
