@@ -26,17 +26,9 @@ const categories = [
 
 const Categories = () => {
   return (
-    <Box sx={{ 
-      width: '320px', // Increased from 280px
-      flexShrink: 0, 
-      borderRight: '1px solid #e0e0e0', 
-      height: 'calc(100vh - 80px)', 
-      overflowY: 'auto',
-      backgroundColor: '#ffffff',
-      pl: 0 // Remove left padding to align with logo
-    }}>
+    <Box sx={{ height: '100%', overflowY: 'auto', scrollbarWidth: 'thin', scrollbarColor: '#888 #f1f1f1', '&::-webkit-scrollbar': { width: '8px' }, '&::-webkit-scrollbar-track': { background: '#f1f1f1' }, '&::-webkit-scrollbar-thumb': { background: '#888', borderRadius: '4px' }, '&::-webkit-scrollbar-thumb:hover': { background: '#555' } }}>
       <Typography variant="h6" sx={{ p: 2, fontWeight: 600 }}>Category</Typography>
-      <List sx={{ p: 0 }}> {/* Remove default List padding */}
+      <List sx={{ p: 0 }}>
         {categories.map((category) => (
           <ListItem key={category.name} disablePadding>
             <ListItemButton>
@@ -56,4 +48,3 @@ const Categories = () => {
 };
 
 export default Categories;
-

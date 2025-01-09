@@ -70,149 +70,64 @@ const Navbar = () => {
   };
 
   return (
-    <AppBar 
-      position="sticky" 
-      sx={{ 
-        backgroundColor: '#ffffff', 
-        boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
-        '& .MuiToolbar-root': {
-          padding: 0,
-        }
-      }} 
-      elevation={0}
-    >
+    <AppBar position="static" sx={{ backgroundColor: '#ffffff', boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)' }} elevation={0}>
       <Toolbar sx={{ 
-        width: '100%', 
-        margin: '0 auto', 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'space-between', 
-        height: '80px',
-        gap: '2rem' 
+        display: 'grid',
+        gridTemplateColumns: '280px 1fr 280px',
+        alignItems: 'center',
+        paddingX: '1rem !important',
+        height: '6rem',
+        '& .MuiToolbar-root': {
+          padding: '0 !important',
+          minHeight: '6rem !important', 
+        },
       }}>
-        {/* Logo container with exact width matching Categories */}
-        <Box sx={{ 
-          display: "flex", 
-          alignItems: "center",
-          width: '320px', 
-          flexShrink: 0,
-          pl: '1rem' // 1rem left padding as you added
-        }}>
-          <Box
-            onClick={handleLogoClick}
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              cursor: 'pointer',
-              '&:hover': {
-                opacity: 0.8,
-              },
-            }}
-          >
-            <img
-              src={Logo}
-              alt="Swappy Nest Logo"
-              style={{ height: '5rem' }}
-            />
-            <Typography variant="h6" sx={{ ml: 2, fontWeight: 600, color: 'primary.main' }}>
-              Swappy Nest
-            </Typography>
-          </Box>
+        {/* Logo */}
+        <Box sx={{ display: "flex", alignItems: "center" }}>
+          <img src={Logo} alt="Swappy Nest Logo" style={{ height: '6rem' }} /> {/* Updated height */}
+          <Typography variant="h6" sx={{ ml: 2, fontWeight: 600, color: 'primary.main' }}>
+            Swappy Nest
+          </Typography>
         </Box>
 
-        {/* Search bar with width matching Feed cards */}
+        {/* Search bar */}
         <Box sx={{
           display: 'flex',
           alignItems: 'center',
           border: "1px solid #e0e0e0",
           borderRadius: "24px",
-          height: '48px',
-          width: '800px', // Increased to 800px
+          padding: '0.5rem 1rem',
           backgroundColor: '#f5f5f5',
-          transition: 'all 0.3s ease',
-          '&:hover': {
-            boxShadow: '0px 0px 8px rgba(0, 0, 0, 0.1)',
-          },
+          width: '100%',
+          maxWidth: 'calc(100% - 80px)',
+          margin: '0 auto',
         }}>
-          <SearchIcon sx={{ color: '#757575', margin: '0 16px', height: '24px', width: '24px' }} />
+          <SearchIcon sx={{ color: '#757575', mr: 1 }} />
           <InputBase
             placeholder="Search your egg..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-            sx={{
-              flex: 1,
-              height: '100%',
-              fontSize: '1rem',
-              color: '#333333',
-              '&::placeholder': {
-                color: '#757575',
-                opacity: 1,
-              },
-            }}
+            sx={{ flex: 1 }}
           />
         </Box>
 
         {/* Right section */}
-        <Box sx={{ 
-          display: "flex", 
-          alignItems: "center", 
-          gap: '1rem',
-          flexShrink: 0,
-          pr: 2 
-        }}>
-          <IconButton
-            sx={{
-              height: "48px",
-              width: "48px",
-              backgroundColor: '#f0f0f0',
-              "&:hover": { backgroundColor: "#e0e0e0" },
-            }}
-            onClick={handleUploadProduct}
-          >
-            <Add sx={{ height: "24px", width: "24px", color: '#333333' }} />
+        <Box sx={{ display: "flex", alignItems: "center", justifyContent: 'space-between', width: '100%', paddingX:"0.5rem"}}> {/* Added space-between */}
+          <IconButton onClick={handleUploadProduct}>
+            <Add />
           </IconButton>
-          <IconButton
-            sx={{
-              height: '48px',
-              width: '48px',
-              backgroundColor: '#f0f0f0',
-              '&:hover': { backgroundColor: "#e0e0e0" },
-            }}
-          >
-            <Notifications sx={{ height: '24px', width: '24px', color: '#333333' }} />
+          <IconButton>
+            <Notifications />
           </IconButton>
-
           {isAuth && (
-            <IconButton
-              onClick={handleProfileClick}
-              sx={{
-                height: '48px',
-                width: '48px',
-                padding: 0,
-                '&:hover': { opacity: 0.8 },
-              }}
-            >
-              <Avatar
-                src={avatarSrc}
-                alt={userData?.username || "User"}
-                sx={{ width: '48px', height: '48px' }}
-              />
+            <IconButton onClick={handleProfileClick}>
+              <Avatar src={avatarSrc} alt={userData?.username || "User"} />
             </IconButton>
           )}
-
           <Button
             variant="contained"
             color="primary"
-            sx={{
-              fontSize: '1rem',
-              padding: '0.5rem 1.5rem',
-              borderRadius: '24px',
-              textTransform: 'none',
-              fontWeight: 600,
-              boxShadow: 'none',
-              '&:hover': { boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)' },
-            }}
             onClick={isAuth ? logout : () => navigate("/login")}
           >
             {isAuth ? 'Logout' : 'Login'}
@@ -224,4 +139,3 @@ const Navbar = () => {
 };
 
 export default Navbar;
-
