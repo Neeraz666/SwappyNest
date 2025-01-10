@@ -1,27 +1,38 @@
 import React from 'react';
 import { Box, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Typography } from '@mui/material';
 import {
-  Storefront, DirectionsCar, Spa, Book, Business, Computer, Tv, Event,
-  LocalGroceryStore, Weekend, Work, Phone, MusicNote, Pets, Home
+  Storefront, DirectionsCar, Book, Spa, CollectionsBookmark, Brush, Computer, 
+  FitnessCenter, Weekend, LocalFlorist, LocalGroceryStore, Favorite, HomeWork, 
+  Kitchen, Movie, MusicNote, Terrain, Pets, Checkroom, SportsBasketball, 
+  Create, Toys, SportsEsports, Watch, Diamond
 } from '@mui/icons-material';
 
 const categories = [
-  { name: 'HB Select', icon: Storefront, count: 0 },
-  { name: 'Apparels & Accessories', icon: Weekend, count: 14052 },
-  { name: 'Automobiles', icon: DirectionsCar, count: 12889 },
-  { name: 'Beauty & Health', icon: Spa, count: 14656 },
-  { name: 'Books & Learning', icon: Book, count: 1717 },
-  { name: 'Business & Industrial', icon: Business, count: 12824 },
-  { name: 'Computers & Peripherals', icon: Computer, count: 52370 },
-  { name: 'Electronics, TVs, & More', icon: Tv, count: 23291 },
-  { name: 'Events & Happenings', icon: Event, count: 448 },
-  { name: 'Fresh Veggies & Meat', icon: LocalGroceryStore, count: 478 },
-  { name: 'Furnishings & Appliances', icon: Weekend, count: 33333 },
-  { name: 'Jobs', icon: Work, count: 416 },
-  { name: 'Mobile Phones & Accessories', icon: Phone, count: 35840 },
-  { name: 'Music Instruments', icon: MusicNote, count: 8219 },
-  { name: 'Pets & Pet Care', icon: Pets, count: 1209 },
-  { name: 'Real Estate', icon: Home, count: 36973 }
+  { name: 'Accessories', icon: Storefront, value: 'accessories' },
+  { name: 'Automotive', icon: DirectionsCar, value: 'automotive' },
+  { name: 'Books', icon: Book, value: 'books' },
+  { name: 'Beauty', icon: Spa, value: 'beauty' },
+  { name: 'Collectibles', icon: CollectionsBookmark, value: 'collectibles' },
+  { name: 'Crafts', icon: Brush, value: 'crafts' },
+  { name: 'Electronics', icon: Computer, value: 'electronics' },
+  { name: 'Fitness', icon: FitnessCenter, value: 'fitness' },
+  { name: 'Furniture', icon: Weekend, value: 'furniture' },
+  { name: 'Garden', icon: LocalFlorist, value: 'garden' },
+  { name: 'Groceries', icon: LocalGroceryStore, value: 'groceries' },
+  { name: 'Health', icon: Favorite, value: 'health' },
+  { name: 'Home Appliances', icon: HomeWork, value: 'home_appliances' },
+  { name: 'Kitchenware', icon: Kitchen, value: 'kitchenware' },
+  { name: 'Movies', icon: Movie, value: 'movies' },
+  { name: 'Music', icon: MusicNote, value: 'music' },
+  { name: 'Outdoor', icon: Terrain, value: 'outdoor' },
+  { name: 'Pet Supplies', icon: Pets, value: 'pet_supplies' },
+  { name: 'Fashion', icon: Checkroom, value: 'fashion' },
+  { name: 'Sports', icon: SportsBasketball, value: 'sports' },
+  { name: 'Stationery', icon: Create, value: 'stationery' },
+  { name: 'Toys', icon: Toys, value: 'toys' },
+  { name: 'Video Games', icon: SportsEsports, value: 'video_games' },
+  { name: 'Watches', icon: Watch, value: 'watches' },
+  { name: 'Jewellry', icon: Diamond, value: 'jewellry' },
 ];
 
 const Categories = () => {
@@ -30,14 +41,13 @@ const Categories = () => {
       <Typography variant="h6" sx={{ p: 2, fontWeight: 600 }}>Category</Typography>
       <List sx={{ p: 0 }}>
         {categories.map((category) => (
-          <ListItem key={category.name} disablePadding>
+          <ListItem key={category.value} disablePadding>
             <ListItemButton>
               <ListItemIcon>
                 <category.icon />
               </ListItemIcon>
               <ListItemText 
                 primary={category.name} 
-                secondary={`(${category.count.toLocaleString()})`}
               />
             </ListItemButton>
           </ListItem>
@@ -48,3 +58,4 @@ const Categories = () => {
 };
 
 export default Categories;
+
