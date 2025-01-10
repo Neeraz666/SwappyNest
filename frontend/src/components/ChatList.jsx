@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Typography, List, ListItem, ListItemText, ListItemAvatar, Avatar } from '@mui/material';
+import { Box, Typography, List, ListItem, ListItemButton, ListItemText, ListItemAvatar, Avatar } from '@mui/material';
 
 const ChatList = () => {
   // This is dummy data. Replace with actual chat data in a real application.
@@ -14,11 +14,13 @@ const ChatList = () => {
       <Typography variant="h6" sx={{ mb: 2 }}>Recent Chats</Typography>
       <List>
         {chats.map((chat) => (
-          <ListItem key={chat.id} button>
-            <ListItemAvatar>
-              <Avatar>{chat.name[0]}</Avatar>
-            </ListItemAvatar>
-            <ListItemText primary={chat.name} secondary={chat.lastMessage} />
+          <ListItem key={chat.id} disablePadding>
+            <ListItemButton>
+              <ListItemAvatar>
+                <Avatar>{chat.name[0]}</Avatar>
+              </ListItemAvatar>
+              <ListItemText primary={chat.name} secondary={chat.lastMessage} />
+            </ListItemButton>
           </ListItem>
         ))}
       </List>
@@ -27,4 +29,3 @@ const ChatList = () => {
 };
 
 export default ChatList;
-

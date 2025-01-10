@@ -320,10 +320,43 @@ export default function Feed({ initialProducts = [] }) {
 
                 <IconButton
                   aria-label="place an offer"
-                  sx={{ marginLeft: 'auto', marginRight: 'auto', padding: 0, '&:hover': { color: 'primary.dark' } }}
+                  sx={{
+                    marginLeft: 'auto',
+                    marginRight: 'auto',
+                    padding: 0,
+                    color: 'white', // Changed to white for better contrast
+                    border: '1px solid',
+                    borderColor: 'primary.main',
+                    borderRadius: '8px',
+                    backgroundColor: 'primary.main', // More vibrant background
+                    boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)', // Added shadow for depth
+                    transition: 'all 0.3s ease', // Smooth transition for hover effects
+                    '&:hover': {
+                      backgroundColor: 'primary.dark',
+                      color: 'white',
+                      borderColor: 'primary.dark',
+                      transform: 'translateY(-2px)', // Slight lift on hover
+                      boxShadow: '0px 6px 8px rgba(0, 0, 0, 0.15)', // Enhanced shadow on hover
+                    },
+                    '&:active': {
+                      transform: 'translateY(0)', // Reset lift on click
+                      boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)', // Reset shadow on click
+                    },
+                  }}
                   onClick={() => handleOpenModal(product)}
                 >
-                  <button>Place an offer</button>
+                  <Typography
+                    variant="button"
+                    sx={{
+                      fontSize: '0.875rem',
+                      fontWeight: 'bold',
+                      padding: '6px 12px',
+                      textTransform: 'uppercase', // Uppercase text for emphasis
+                      letterSpacing: '0.05em', // Slight letter spacing for better readability
+                    }}
+                  >
+                    Place an Offer
+                  </Typography>
                 </IconButton>
 
                 <IconButton aria-label="share" sx={{ marginRight: 0, padding: 0, '&:hover': { color: 'primary.dark' } }}>

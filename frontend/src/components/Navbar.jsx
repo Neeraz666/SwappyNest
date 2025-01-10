@@ -43,7 +43,7 @@ const Navbar = () => {
     return `${BASE_URL}${imagePath}?${new Date().getTime()}`;
   };
 
-  const handleLogoClick = () => {
+  const handleSendToHome = () => {
     navigate('/');
   };
 
@@ -70,22 +70,27 @@ const Navbar = () => {
   };
 
   return (
-    <AppBar position="static" sx={{ backgroundColor: '#ffffff', boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)' }} elevation={0}>
-      <Toolbar sx={{ 
+    <AppBar
+      position="sticky"
+      sx={{
+        backgroundColor: '#ffffff',
+        boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
+        top: 0,
+        zIndex: (theme) => theme.zIndex.drawer + 1,
+      }}
+      elevation={0}
+    >
+      <Toolbar sx={{
         display: 'grid',
         gridTemplateColumns: '280px 1fr 280px',
         alignItems: 'center',
         paddingX: '1rem !important',
         height: '6rem',
-        '& .MuiToolbar-root': {
-          padding: '0 !important',
-          minHeight: '6rem !important', 
-        },
       }}>
         {/* Logo */}
-        <Box sx={{ display: "flex", alignItems: "center" }}>
-          <img src={Logo} alt="Swappy Nest Logo" style={{ height: '6rem' }} /> {/* Updated height */}
-          <Typography variant="h6" sx={{ ml: 2, fontWeight: 600, color: 'primary.main' }}>
+        <Box sx={{ display: "flex", alignItems: "center" }} onClick={handleSendToHome}>
+          <img src={Logo} alt="Swappy Nest Logo" style={{ height: '6rem', cursor: 'pointer' }} />
+          <Typography variant="h6" sx={{ ml: 2, fontWeight: 600, color: 'primary.main', cursor: 'pointer' }} >
             Swappy Nest
           </Typography>
         </Box>
@@ -113,7 +118,7 @@ const Navbar = () => {
         </Box>
 
         {/* Right section */}
-        <Box sx={{ display: "flex", alignItems: "center", justifyContent: 'space-between', width: '100%', paddingX:"0.5rem"}}> {/* Added space-between */}
+        <Box sx={{ display: "flex", alignItems: "center", justifyContent: 'space-between', width: '100%', paddingX: "0.5rem" }}>
           <IconButton onClick={handleUploadProduct}>
             <Add />
           </IconButton>

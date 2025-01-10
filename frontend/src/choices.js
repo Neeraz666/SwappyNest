@@ -29,6 +29,6 @@ export const CATEGORY_CHOICES = [
     { value: 'toys', label: 'Toys' },
     { value: 'video_games', label: 'Video Games' },
     { value: 'watches', label: 'Watches' },
-    { value: 'jewelry', label: 'Jewelry' },
+    { value: 'jewellry', label: 'Jewellry' },
   ];
   

@@ -26,7 +26,7 @@ const categories = [
 
 const Categories = () => {
   return (
-    <Box sx={{ height: '100%', overflowY: 'auto', scrollbarWidth: 'thin', scrollbarColor: '#888 #f1f1f1', '&::-webkit-scrollbar': { width: '8px' }, '&::-webkit-scrollbar-track': { background: '#f1f1f1' }, '&::-webkit-scrollbar-thumb': { background: '#888', borderRadius: '4px' }, '&::-webkit-scrollbar-thumb:hover': { background: '#555' } }}>
+    <Box sx={{ height: '100%' }}>
       <Typography variant="h6" sx={{ p: 2, fontWeight: 600 }}>Category</Typography>
       <List sx={{ p: 0 }}>
         {categories.map((category) => (
@@ -37,7 +37,7 @@ const Categories = () => {
               </ListItemIcon>
               <ListItemText 
                 primary={category.name} 
-                secondary={`(${category.count})`}
+                secondary={`(${category.count.toLocaleString()})`}
               />
             </ListItemButton>
           </ListItem>
