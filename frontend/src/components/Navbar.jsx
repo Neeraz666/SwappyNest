@@ -1,36 +1,49 @@
 import React, { useState, useEffect } from "react";
-import { AppBar, Toolbar, IconButton, InputBase, Box, Button, Avatar } from "@mui/material";
+import { AppBar, Toolbar, IconButton, InputBase, Box, Button, Avatar, Typography } from "@mui/material";
 import { Search as SearchIcon, Notifications, Add } from "@mui/icons-material";
 import { useAuth } from "../context/authContext";
 import { useNavigate } from "react-router-dom";
-import AvatarComponent from "./AvatarComponent";
-import genericProfileImage from '../assets/profile.png';
 import Logo from '../assets/nest-blue.svg';
+import genericProfileImage from '../assets/profile.png';
 
 const BASE_URL = 'http://127.0.1:8000';
 
 const Navbar = () => {
-  const { isAuth, logout, userData } = useAuth();
+  const { isAuth, logout, userData, fetchUserData } = useAuth();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [avatarSrc, setAvatarSrc] = useState(genericProfileImage);
 
   useEffect(() => {
-    if (userData?.user?.profilephoto) {
-      setAvatarSrc(getFullImageUrl(userData.user.profilephoto));
-    } else {
-      setAvatarSrc(genericProfileImage);
-    }
-  }, [userData]);
+    const loadUserData = async () => {
+      try {
+        if (isAuth) {
+          const data = await fetchUserData();
+          if (data?.profilephoto) {
+            setAvatarSrc(getFullImageUrl(data.profilephoto));
+          } else {
+            setAvatarSrc(genericProfileImage);
+          }
+        } else {
+          setAvatarSrc(genericProfileImage);
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+        setAvatarSrc(genericProfileImage);
+      }
+    };
+
+    loadUserData();
+  }, [isAuth, fetchUserData]);
 
   const getFullImageUrl = (imagePath) => {
     if (imagePath.startsWith('http')) {
       return imagePath;
     }
-    return `${BASE_URL}${imagePath}`;
+    return `${BASE_URL}${imagePath}?${new Date().getTime()}`;
   };
 
-  const handleLogoClick = () => {
+  const handleSendToHome = () => {
     navigate('/');
   };
 
@@ -50,96 +63,76 @@ const Navbar = () => {
     }
   };
 
-  return (
-    <AppBar position="sticky" sx={{ backgroundColor: '#f9f8f6', padding: 0 }} elevation={0}>
-      <Toolbar sx={{ maxWidth: '1400px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 0 }}>
-        <Box sx={{ display: "flex", alignItems: "center" }}>
-          <Box
-            onClick={handleLogoClick}
-            sx={{
-              display: "flex",
-              marginRight: "1rem",
-              alignItems: "center",
-              cursor: 'pointer',
-              '&:hover': {
-                opacity: 0.8,
-              },
-            }}
-          >
-            <img
-              src={Logo}
-              alt="Swappy Nest Logo"
-              style={{ height: '6rem' }}
-            />
-          </Box>
+  const handleProfileClick = () => {
+    if (isAuth && userData?.id) {
+      navigate(`/profile/${userData.id}`);
+    }
+  };
 
-          <Box sx={{
-            display: 'flex',
-            alignItems: 'center',
-            border: "1px solid #ccc",
-            padding: "2px 8px",
-            borderRadius: "4px",
-            height: '3rem',
-            width: '40rem',
-            mr: '5rem'
-          }}>
-            <SearchIcon sx={{ color: '#727271', marginRight: 1, height: '1.5rem', width: '1.5rem' }} />
-            <InputBase
-              placeholder="Search your egg..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-              sx={{
-                flex: 1,
-                height: '100%',
-                fontSize: '1rem',
-                minWidth: 0
-              }}
-            />
-          </Box>
+  return (
+    <AppBar
+      position="sticky"
+      sx={{
+        backgroundColor: '#ffffff',
+        boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
+        top: 0,
+        zIndex: (theme) => theme.zIndex.drawer + 1,
+      }}
+      elevation={0}
+    >
+      <Toolbar sx={{
+        display: 'grid',
+        gridTemplateColumns: '280px 1fr 280px',
+        alignItems: 'center',
+        paddingX: '1rem !important',
+        height: '6rem',
+      }}>
+        {/* Logo */}
+        <Box sx={{ display: "flex", alignItems: "center" }} onClick={handleSendToHome}>
+          <img src={Logo} alt="Swappy Nest Logo" style={{ height: '6rem', cursor: 'pointer' }} />
+          <Typography variant="h6" sx={{ ml: 2, fontWeight: 600, color: 'primary.main', cursor: 'pointer' }} >
+            Swappy Nest
+          </Typography>
         </Box>
 
-        <Box sx={{ display: "flex", alignItems: "center", ml: 2 }}>
-          <IconButton
-            sx={{
-              height: "4rem",
-              width: "4rem",
-              "&:hover": { color: "primary.dark" },
-            }}
-            onClick={handleUploadProduct}
-          >
-            <Add sx={{ height: "2rem", width: "2rem" }} />
-          </IconButton>
-          <IconButton
-            sx={{
-              height: '4rem',
-              width: '4rem',
-              '&:hover': { color: 'primary.dark' }
-            }}
-          >
-            <Notifications sx={{ height: '2rem', width: '2rem' }} />
-          </IconButton>
+        {/* Search bar */}
+        <Box sx={{
+          display: 'flex',
+          alignItems: 'center',
+          border: "1px solid #e0e0e0",
+          borderRadius: "24px",
+          padding: '0.5rem 1rem',
+          backgroundColor: '#f5f5f5',
+          width: '100%',
+          maxWidth: 'calc(100% - 80px)',
+          margin: '0 auto',
+        }}>
+          <SearchIcon sx={{ color: '#757575', mr: 1 }} />
+          <InputBase
+            placeholder="Search your egg..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+            sx={{ flex: 1 }}
+          />
+        </Box>
 
+        {/* Right section */}
+        <Box sx={{ display: "flex", alignItems: "center", justifyContent: 'space-between', width: '100%', paddingX: "0.5rem" }}>
+          <IconButton onClick={handleUploadProduct}>
+            <Add />
+          </IconButton>
+          <IconButton>
+            <Notifications />
+          </IconButton>
           {isAuth && (
-            <IconButton
-              sx={{
-                height: '4rem',
-                width: '4rem',
-                '&:hover': { color: 'primary.dark' }
-              }}
-            >
-              <AvatarComponent src={avatarSrc} userId={userData?.user.id} key={userData?.user.id} />
+            <IconButton onClick={handleProfileClick}>
+              <Avatar src={avatarSrc} alt={userData?.username || "User"} />
             </IconButton>
           )}
-
           <Button
             variant="contained"
             color="primary"
-            sx={{
-              fontSize: '1.2rem',
-              padding: '0.5rem 1rem',
-              '&:hover': { backgroundColor: 'primary.dark' }
-            }}
             onClick={isAuth ? logout : () => navigate("/login")}
           >
             {isAuth ? 'Logout' : 'Login'}

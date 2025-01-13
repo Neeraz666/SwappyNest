@@ -24,8 +24,8 @@ const BASE_URL = 'http://127.0.0.1:8000';
 
 export default function EditProfile({ open, onClose, onProfileUpdated }) {
   const { userId } = useParams();
-  const { userData, fetchUserData } = useAuth();
-  const [user, setUser] = useState(null);
+  const { userData, fetchUserData, updateUserData } = useAuth();
+  const [user, setUser] = useState({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
@@ -34,25 +34,23 @@ export default function EditProfile({ open, onClose, onProfileUpdated }) {
 
   useEffect(() => {
     const loadUserData = async () => {
-      if (userData && userData.user) {
-        setUser(userData.user);
-        if (userData.user.profilephoto) {
-          setProfilePicturePreview(`${BASE_URL}${userData.user.profilephoto}`);
+      try {
+        let userResponse;
+        if (userData && userData.id) {
+          userResponse = { data: userData };
+        } else {
+          userResponse = await axios.get(`${BASE_URL}/api/user/profile/${userId}/`);
         }
+
+        setUser(userResponse.data);
+        if (userResponse.data.profilephoto) {
+          setProfilePicturePreview(`${BASE_URL}${userResponse.data.profilephoto}`);
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+        setSnackbar({ open: true, message: 'Failed to load user data', severity: 'error' });
+      } finally {
         setLoading(false);
-      } else {
-        try {
-          const response = await axios.get(`${BASE_URL}/api/user/profile/${userId}/`);
-          setUser(response.data.user);
-          if (response.data.user.profilephoto) {
-            setProfilePicturePreview(`${BASE_URL}${response.data.user.profilephoto}`);
-          }
-          setLoading(false);
-        } catch (error) {
-          console.error('Error fetching user data:', error);
-          setSnackbar({ open: true, message: 'Failed to load user data', severity: 'error' });
-          setLoading(false);
-        }
       }
     };
 
@@ -67,55 +65,62 @@ export default function EditProfile({ open, onClose, onProfileUpdated }) {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setProfilePicture(file); // Store the file for submission
-      setProfilePicturePreview(URL.createObjectURL(file)); // Show the preview
-      setUser((prevUser) => ({ ...prevUser, profilephoto: file })); // Update user state
+      setProfilePicture(file);
+      setProfilePicturePreview(URL.createObjectURL(file));
+      setUser((prevUser) => ({ ...prevUser, profilephoto: file }));
     }
   };
-  
+
   const handleRemoveImage = () => {
     setProfilePicture(null);
     setProfilePicturePreview(null);
-    setUser((prevUser) => ({ ...prevUser, profilephoto: null })); 
+    setUser((prevUser) => ({ ...prevUser, profilephoto: null }));
   };
 
- const handleSubmit = async (e) => {
-  e.preventDefault();
-  setSaving(true);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSaving(true);
 
-  const formData = new FormData();
-  formData.append('email', user.email);
-  formData.append('firstname', user.firstname);
-  formData.append('lastname', user.lastname);
-  formData.append('phone', user.phone || '');
-  formData.append('address', user.address || '');
+    const formData = new FormData();
+    formData.append('email', user.email || '');
+    formData.append('firstname', user.firstname || '');
+    formData.append('lastname', user.lastname || '');
+    formData.append('phone', user.phone || '');
+    formData.append('address', user.address || '');
 
-  if (profilePicture) {
-    formData.append('profilephoto', profilePicture); // Add new photo if uploaded
-  } else if (profilePicturePreview === null) {
-    formData.append('remove_profilephoto', 'true'); // Notify backend to remove photo
-  }
+    if (profilePicture) {
+      formData.append('profilephoto', profilePicture);
+    } else if (profilePicturePreview === null) {
+      formData.append('remove_profilephoto', 'true');
+    }
 
-  try {
-    const accessToken = localStorage.getItem('access_token');
-    const response = await axios.put(`${BASE_URL}/api/user/profile/${userId}/`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
+    try {
+      const accessToken = localStorage.getItem('access_token');
+      const response = await axios.put(`${BASE_URL}/api/user/profile/${userId}/`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
 
-    await fetchUserData(); // Refresh user data after successful update
-    setSnackbar({ open: true, message: 'Profile updated successfully', severity: 'success' });
-    onProfileUpdated();
-    onClose();
-  } catch (error) {
-    console.error('Error updating user data:', error);
-    setSnackbar({ open: true, message: `Failed to update profile: ${error.response?.data || error.message}`, severity: 'error' });
-  } finally {
-    setSaving(false);
-  }
-};
+      updateUserData(response.data);
+      await fetchUserData();
+      setSnackbar({ open: true, message: 'Profile updated successfully', severity: 'success' });
+
+      if (response.data.profilephoto) {
+        onProfileUpdated(response.data.profilephoto);
+      } else {
+        onProfileUpdated(null);
+      }
+
+      onClose();
+    } catch (error) {
+      console.error('Error updating user data:', error);
+      setSnackbar({ open: true, message: `Failed to update profile: ${error.response?.data || error.message}`, severity: 'error' });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const handleSnackbarClose = (event, reason) => {
     if (reason === 'clickaway') return;
@@ -240,6 +245,16 @@ export default function EditProfile({ open, onClose, onProfileUpdated }) {
           {saving ? <CircularProgress size={24} /> : 'Save Changes'}
         </Button>
       </DialogActions>
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={handleSnackbarClose}
+      >
+        <Alert onClose={handleSnackbarClose} severity={snackbar.severity}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Dialog>
   );
 }
+
