@@ -3,12 +3,13 @@ from django.shortcuts import get_object_or_404
 from django.core.files.storage import default_storage
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.views import APIView
-from rest_framework.generics import RetrieveAPIView
+from rest_framework.generics import RetrieveAPIView, ListAPIView
 from rest_framework.response import Response
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError, PermissionDenied
-from .serializers import UserSerializer
+from .models import UserReview
+from .serializers import UserSerializer, UserReviewSerializer
 from products.models import Product
 from  products.serializers import ProductSerializer
 
@@ -117,3 +118,56 @@ class UserProductsView(APIView):
         serializer = ProductSerializer(products, many=True)
         
         return Response(serializer.data, status=status.HTTP_200_OK)
+    
+
+
+class ReviewCreateAPIView(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def post(self, request):
+        data = request.data
+        current_user = request.user
+
+        reviewed_user_email = data.get('reviewed_user')
+        rating = data.get('rating')
+        content = data.get('content')
+
+        reviewed_user = get_object_or_404(User, email = reviewed_user_email)
+
+        try:
+            review = UserReview.objects.create(
+                reviewed_user = reviewed_user,
+                reviewer = current_user,
+                rating = rating,
+                content = content
+            )
+
+            review.save()
+
+            return Response({'success': 'Your review has been uploaded sucessfully!'})
+        except Exception as e:
+            return Response({'error':str(e)}, status = status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+
+class ListReviewForUserAPIView(ListAPIView):
+    permission_classes = (permissions.AllowAny,)
+    serializer_class = UserReviewSerializer
+    
+    def get_queryset(self):
+        user_id = self.kwargs.get('user_id')
+
+        if user_id:
+            return UserReview.objects.filter(reviewed_user = user_id)
+        return Response({'error': 'Please provide user detail!'})
+
+
+class ListReviewByUserAPIView(ListAPIView):
+    permission_classes = (permissions.AllowAny,)
+    serializer_class = UserReviewSerializer
+
+    def get_queryset(self):
+        user_id = self.kwargs.get('user_id')
+
+        if user_id:
+            return UserReview.objects.filter(reviewer = user_id)
+        return Response({'error': 'Please provide user details!'})
