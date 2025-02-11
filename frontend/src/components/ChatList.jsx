@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Box, Typography, List, ListItem, ListItemButton, ListItemText, ListItemAvatar, Avatar, Paper } from '@mui/material';
-import ChatBox from './ChatBox';
+import ChatBox from './Chatbox';
 
 const ChatList = () => {
   const [selectedChat, setSelectedChat] = useState(null);
