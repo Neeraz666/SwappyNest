@@ -10,8 +10,9 @@ class Conversation(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):
-        participants = ', '.join([str(user) for user in self.participants.all()])
-        return f'Conversation between {participants}'
+        # Sanitize the conversation name: replace spaces and special characters with underscores
+        participant_emails = [user.email for user in self.participants.all()]
+        return "conversation_" + "_".join(sorted(participant_emails))
 
 class Message(models.Model):
     conversation = models.ForeignKey(Conversation, related_name='messages', on_delete=models.CASCADE)

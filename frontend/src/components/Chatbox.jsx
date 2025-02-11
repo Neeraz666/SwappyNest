@@ -1,15 +1,37 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Typography, Paper, IconButton, TextField, Button, Avatar } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 
 const ChatBox = ({ chat, onClose }) => {
-  // Dummy conversation messages
-  const messages = [
-    { sender: 'user', text: 'Hey, is this still available?' },
-    { sender: 'chat', text: 'Yes, it is. Would you like more details?' },
-    { sender: 'user', text: 'Yes, please. Can you share the pricing and features?' },
-    { sender: 'chat', text: 'Sure! The price is $100, and it includes free shipping.' },
-  ];
+  const [messages, setMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState('');
+  const [socket, setSocket] = useState(null);
+
+  useEffect(() => {
+    // Open WebSocket connection when the component mounts
+    const ws = new WebSocket(`ws://localhost:8000/ws/chat/${chat.name}/`);
+  
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      setMessages((prevMessages) => [...prevMessages, { sender: data.sender, text: data.message }]);
+    };
+  
+    setSocket(ws);
+  
+    return () => {
+      ws.close(); // Close WebSocket connection when the component unmounts
+    };
+  }, [chat]);
+  
+
+  const handleSendMessage = () => {
+    if (newMessage.trim()) {
+      // Send the message to the WebSocket server
+      socket.send(JSON.stringify({ message: newMessage }));
+      setMessages([...messages, { sender: 'user', text: newMessage }]);
+      setNewMessage('');
+    }
+  };
 
   return (
     <Paper elevation={3} sx={{ flex: 0.4, borderTop: '1px solid #e0e0e0', backgroundColor: '#ffffff', p: 2, borderRadius: '8px', display: 'flex', flexDirection: 'column' }}>
@@ -36,8 +58,15 @@ const ChatBox = ({ chat, onClose }) => {
       
       {/* Message Input */}
       <Box sx={{ display: 'flex', gap: 1 }}>
-        <TextField fullWidth variant="outlined" placeholder="Type a message..." sx={{ flex: 1 }} />
-        <Button variant="contained" color="primary">Send</Button>
+        <TextField
+          fullWidth
+          variant="outlined"
+          placeholder="Type a message..."
+          sx={{ flex: 1 }}
+          value={newMessage}
+          onChange={(e) => setNewMessage(e.target.value)}
+        />
+        <Button variant="contained" color="primary" onClick={handleSendMessage}>Send</Button>
       </Box>
     </Paper>
   );

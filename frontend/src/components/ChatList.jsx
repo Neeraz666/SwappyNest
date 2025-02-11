@@ -1,22 +1,45 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Typography, List, ListItem, ListItemButton, ListItemText, ListItemAvatar, Avatar, Paper } from '@mui/material';
 import ChatBox from './Chatbox';
+import { useAuth } from '../context/authContext'; // Adjust the import path as necessary
 
 const ChatList = () => {
+  const { isAuth } = useAuth(); // Use your authentication context
   const [selectedChat, setSelectedChat] = useState(null);
+  const [conversations, setConversations] = useState([]);
 
-  const chats = [
-    { id: 1, name: 'John Doe', lastMessage: 'Hey, is this still available?' },
-    { id: 2, name: 'Jane Smith', lastMessage: 'I\'m interested in your product.' },
-    { id: 3, name: 'Bob Johnson', lastMessage: 'Can we negotiate the price?' },
-    { id: 3, name: 'Bob Johnson', lastMessage: 'Can we negotiate the price?' },
-    { id: 3, name: 'Bob Johnson', lastMessage: 'Can we negotiate the price?' },
-    { id: 3, name: 'Bob Johnson', lastMessage: 'Can we negotiate the price?' },
-    { id: 3, name: 'Bob Johnson', lastMessage: 'Can we negotiate the price?' },
-    { id: 3, name: 'Bob Johnson', lastMessage: 'Can we negotiate the price?' },
-    { id: 3, name: 'Bob Johnson', lastMessage: 'Can we negotiate the price?' },
-    { id: 3, name: 'Bob Johnson', lastMessage: 'Can we negotiate the price?' },
-  ];
+  useEffect(() => {
+    console.log('isAuthenticated:', isAuth); // Debugging line
+  
+    if (isAuth) {
+      const token = localStorage.getItem('access_token'); // Get token from localStorage
+  
+      if (token) {
+        // Add the token to the Authorization header
+        fetch('http://localhost:8000/api/chatapp/conversations/', {
+          headers: {
+            'Authorization': `Bearer ${token}`, // Add token here
+          },
+        })
+          .then(response => response.json())
+          .then(data => {
+            console.log('Fetched conversations:', data); // Debugging line
+            setConversations(Array.isArray(data) ? data : []); // Ensure data is an array
+          })
+          .catch(error => console.error('Error fetching conversations:', error));
+      } else {
+        console.error('No access token found');
+      }
+    }
+  }, [isAuth]);
+
+  useEffect(() => {
+    console.log('Conversations state:', conversations); // Debugging line
+  }, [conversations]);
+
+  if (!isAuth) {
+    return <Typography variant='h6'>You need to log in first</Typography>; // Or render a message indicating the user is not authenticated
+  }
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -24,13 +47,19 @@ const ChatList = () => {
       <Paper elevation={3} sx={{ flex: selectedChat ? 0.6 : 1, overflowY: 'auto', transition: 'flex 0.3s ease', borderRadius: '8px', p: 2, backgroundColor: '#fff' }}>
         <Typography variant="h6" sx={{ mb: 2 }}>Recent Chats</Typography>
         <List>
-          {chats.map((chat) => (
+          {conversations.map((chat) => (
             <ListItem key={chat.id} disablePadding>
               <ListItemButton onClick={() => setSelectedChat(chat)} selected={selectedChat?.id === chat.id}>
                 <ListItemAvatar>
-                  <Avatar>{chat.name[0]}</Avatar>
+                  <Avatar>
+                    {/* Safely access the first participant's username */}
+                    {chat.participants && chat.participants[0] ? chat.participants[0].username[0] : 'U'}
+                  </Avatar>
                 </ListItemAvatar>
-                <ListItemText primary={chat.name} secondary={chat.lastMessage} />
+                <ListItemText
+                  primary={chat.participants && chat.participants[1] ? chat.participants[1].username : 'Unknown'}
+                  secondary="Last message..." // You can replace this with actual message content if available
+                />
               </ListItemButton>
             </ListItem>
           ))}
@@ -38,7 +67,7 @@ const ChatList = () => {
       </Paper>
 
       {/* Chat Box Component */}
-      {selectedChat && <ChatBox chat={selectedChat} onClose={() => setSelectedChat(null)}  />}
+      {selectedChat && <ChatBox chat={selectedChat} onClose={() => setSelectedChat(null)} />}
     </Box>
   );
 };
