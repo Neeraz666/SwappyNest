@@ -7,7 +7,7 @@ import AvatarComponent from './AvatarComponent';
 
 const BASE_URL = 'http://127.0.1:8000';
 
-export default function Feed({ initialProducts = [] }) {
+export default function Feed({ initialProducts = [], searchQuery, categorySlug }) {
   const [products, setProducts] = useState(initialProducts);
   const [showMore, setShowMore] = useState({});
   const [modalOpen, setModalOpen] = useState(false);
@@ -34,8 +34,19 @@ export default function Feed({ initialProducts = [] }) {
     if (loading || !hasMore) return;
     setLoading(true);
     try {
-      console.log(`Fetching products from: ${nextPageUrl || `${BASE_URL}/api/products/listallproduct/`}`);
-      const response = await fetch(nextPageUrl || `${BASE_URL}/api/products/listallproduct/`);
+      let url;
+      if (categorySlug) {
+        // Fetch products for the specific category
+        url = nextPageUrl || `${BASE_URL}/api/products/${categorySlug}/`;
+      } else if (searchQuery) {
+        // Fetch products based on the search query
+        url = nextPageUrl || `${BASE_URL}/api/products/search/?q=${searchQuery}`;
+      } else {
+        // Fetch all products
+        url = nextPageUrl || `${BASE_URL}/api/products/listallproduct/`;
+      }
+      console.log(`Fetching products from: ${url}`);
+      const response = await fetch(url);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -60,7 +71,7 @@ export default function Feed({ initialProducts = [] }) {
     } finally {
       setLoading(false);
     }
-  }, [nextPageUrl, loading, hasMore]);
+  }, [nextPageUrl, loading, hasMore, categorySlug, searchQuery]);
 
   useEffect(() => {
     if (initialProducts.length === 0) {
@@ -68,7 +79,7 @@ export default function Feed({ initialProducts = [] }) {
     } else {
       setProducts(initialProducts);
     }
-  }, []);
+  }, [categorySlug, searchQuery]); // Add categorySlug and searchQuery as dependencies
 
   const handleOpenModal = (product) => {
     setSelectedProduct(product);
@@ -203,7 +214,6 @@ export default function Feed({ initialProducts = [] }) {
         },
       }}
     >
-
       <Box
         sx={{
           display: 'flex',
@@ -363,8 +373,6 @@ export default function Feed({ initialProducts = [] }) {
                   <Share />
                 </IconButton>
               </CardActions>
-
-
             </Card>
           );
         })}
