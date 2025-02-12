@@ -5,7 +5,7 @@ import genericProfileImage from '../assets/profile.png';
 import ProductModal from './ProductModal';
 import AvatarComponent from './AvatarComponent';
 
-const BASE_URL = 'http://127.0.1:8000';
+const BASE_URL = 'http://127.0.0.1:8000';
 
 export default function Feed({ initialProducts = [], searchQuery, categorySlug }) {
   const [products, setProducts] = useState(initialProducts);
