@@ -9,13 +9,6 @@ const ChatList = () => {
     { id: 1, name: 'John Doe', lastMessage: 'Hey, is this still available?' },
     { id: 2, name: 'Jane Smith', lastMessage: 'I\'m interested in your product.' },
     { id: 3, name: 'Bob Johnson', lastMessage: 'Can we negotiate the price?' },
-    { id: 3, name: 'Bob Johnson', lastMessage: 'Can we negotiate the price?' },
-    { id: 3, name: 'Bob Johnson', lastMessage: 'Can we negotiate the price?' },
-    { id: 3, name: 'Bob Johnson', lastMessage: 'Can we negotiate the price?' },
-    { id: 3, name: 'Bob Johnson', lastMessage: 'Can we negotiate the price?' },
-    { id: 3, name: 'Bob Johnson', lastMessage: 'Can we negotiate the price?' },
-    { id: 3, name: 'Bob Johnson', lastMessage: 'Can we negotiate the price?' },
-    { id: 3, name: 'Bob Johnson', lastMessage: 'Can we negotiate the price?' },
   ];
 
   return (
