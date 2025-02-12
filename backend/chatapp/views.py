@@ -5,6 +5,8 @@ from .models import Conversation, Message
 from .serializers import MessageSerializer
 from django.contrib.auth import get_user_model
 
+user = get_user_model()
+
 class ConversationListView(APIView):
     permission_classes = (permissions.IsAuthenticated,)  # Only authenticated users can access this view
 
@@ -38,15 +40,26 @@ class ConversationListView(APIView):
 
         return Response(data)
 
+user = get_user_model()
 
 class ConversationMessagesView(APIView):
+
     permission_classes = (permissions.IsAuthenticated,)
 
     def get(self, request, conversation_id):
         try:
             conversation = Conversation.objects.get(id=conversation_id)
+            participants = conversation.participants.all()
+            print(participants)
+
+            
+            # Ensure the current user is part of the conversation
+            if request.user not in conversation.participants.all():
+                return Response({"error": "Access denied"}, status=403)
+
             messages = Message.objects.filter(conversation=conversation)
-            message_data = [{"sender": msg.sender.username, "text": msg.text} for msg in messages]
+            message_data = [{"sender": msg.sender.username, "text": msg.content} for msg in messages]
             return Response(message_data)
+        
         except Conversation.DoesNotExist:
             return Response({"error": "Conversation not found"}, status=404)
