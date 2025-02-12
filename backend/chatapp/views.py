@@ -1,7 +1,8 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import permissions
-from .models import Conversation
+from .models import Conversation, Message
+from .serializers import MessageSerializer
 from django.contrib.auth import get_user_model
 
 class ConversationListView(APIView):
@@ -24,7 +25,7 @@ class ConversationListView(APIView):
             ]
 
             # Generate the conversation name: "conversation_user1_user2"
-            participant_usernames = sorted([user.email for user in conversation.participants.all()])
+            participant_usernames = sorted([str(user.id) for user in conversation.participants.all()])
             conversation_name = f"conversation_{'_'.join(participant_usernames)}"
 
             # Add the conversation details to the response data
@@ -36,3 +37,16 @@ class ConversationListView(APIView):
             })
 
         return Response(data)
+
+
+class ConversationMessagesView(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get(self, request, conversation_id):
+        try:
+            conversation = Conversation.objects.get(id=conversation_id)
+            messages = Message.objects.filter(conversation=conversation)
+            message_data = [{"sender": msg.sender.username, "text": msg.text} for msg in messages]
+            return Response(message_data)
+        except Conversation.DoesNotExist:
+            return Response({"error": "Conversation not found"}, status=404)

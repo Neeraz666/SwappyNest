@@ -1,37 +1,73 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Paper, IconButton, TextField, Button, Avatar } from '@mui/material';
+import { Box, Typography, Paper, IconButton, TextField, Button, Avatar, CircularProgress } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 
 const ChatBox = ({ chat, onClose }) => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [socket, setSocket] = useState(null);
+  const [loading, setLoading] = useState(true); // Loading state for messages
 
+  // Fetch previous messages for the selected chat when the component mounts
   useEffect(() => {
+    const token = localStorage.getItem('access_token'); // Assuming the token is stored in localStorage
+    if (token) {
+      setLoading(true); // Set loading to true before fetching messages
+      fetch(`http://localhost:8000/api/chatapp/conversations/${chat.id}/messages/`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          setMessages(data); // Assuming the response contains an array of messages
+          setLoading(false); // Set loading to false after data is fetched
+        })
+        .catch((error) => {
+          console.error('Error fetching messages:', error);
+          setLoading(false); // Set loading to false if there's an error
+        });
+    }
+
     // Open WebSocket connection when the component mounts
     const ws = new WebSocket(`ws://localhost:8000/ws/chat/${chat.name}/`);
-  
+
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
       setMessages((prevMessages) => [...prevMessages, { sender: data.sender, text: data.message }]);
     };
-  
+
     setSocket(ws);
-  
+
     return () => {
       ws.close(); // Close WebSocket connection when the component unmounts
     };
   }, [chat]);
-  
 
   const handleSendMessage = () => {
     if (newMessage.trim()) {
-      // Send the message to the WebSocket server
-      socket.send(JSON.stringify({ message: newMessage }));
-      setMessages([...messages, { sender: 'user', text: newMessage }]);
-      setNewMessage('');
+      const token = localStorage.getItem('access_token');
+      if (token) {
+        // Decode the token to get the sender's user ID
+        const decodedToken = JSON.parse(atob(token.split('.')[1])); 
+        const senderId = decodedToken.user_id;
+  
+        // Send message with dynamic sender and receiver IDs
+        socket.send(
+          JSON.stringify({
+            message: newMessage,
+            sender_id: senderId,
+            receiver_id: chat.receiverId,  // Use receiverId from selectedChat
+          })
+        );
+  
+        // Update UI with new message
+        setMessages([...messages, { sender: 'user', text: newMessage }]);
+        setNewMessage('');
+      }
     }
   };
+  
 
   return (
     <Paper elevation={3} sx={{ flex: 0.4, borderTop: '1px solid #e0e0e0', backgroundColor: '#ffffff', p: 2, borderRadius: '8px', display: 'flex', flexDirection: 'column' }}>
@@ -42,20 +78,24 @@ const ChatBox = ({ chat, onClose }) => {
           <CloseIcon />
         </IconButton>
       </Box>
-      
+
       {/* Chat Messages */}
       <Box sx={{ flex: 1, overflowY: 'auto', p: 2, backgroundColor: '#f9f9f9', borderRadius: '8px', mb: 2 }}>
-        {messages.map((msg, index) => (
-          <Box key={index} display="flex" alignItems="center" justifyContent={msg.sender === 'user' ? 'flex-end' : 'flex-start'} mb={1}>
-            {msg.sender === 'chat' && <Avatar sx={{ mr: 1 }}>C</Avatar>}
-            <Paper sx={{ p: 1, backgroundColor: msg.sender === 'user' ? '#dcf8c6' : '#ffffff', borderRadius: '8px', maxWidth: '70%' }}>
-              <Typography variant="body2">{msg.text}</Typography>
-            </Paper>
-            {msg.sender === 'user' && <Avatar sx={{ ml: 1 }}>U</Avatar>}
-          </Box>
-        ))}
+        {loading ? (
+          <CircularProgress sx={{ margin: 'auto', display: 'block' }} /> // Show loading spinner while messages are being fetched
+        ) : (
+          messages.map((msg, index) => (
+            <Box key={index} display="flex" alignItems="center" justifyContent={msg.sender === 'user' ? 'flex-end' : 'flex-start'} mb={1}>
+              {msg.sender === 'chat' && <Avatar sx={{ mr: 1 }}>C</Avatar>}
+              <Paper sx={{ p: 1, backgroundColor: msg.sender === 'user' ? '#dcf8c6' : '#ffffff', borderRadius: '8px', maxWidth: '70%' }}>
+                <Typography variant="body2">{msg.text}</Typography>
+              </Paper>
+              {msg.sender === 'user' && <Avatar sx={{ ml: 1 }}>U</Avatar>}
+            </Box>
+          ))
+        )}
       </Box>
-      
+
       {/* Message Input */}
       <Box sx={{ display: 'flex', gap: 1 }}>
         <TextField
