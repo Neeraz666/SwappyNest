@@ -100,7 +100,7 @@ export default function Feed({ initialProducts = [], searchQuery, categorySlug }
       setNextPageUrl(null)
       setHasMore(true)
     }
-  }, [initialProducts, fetchProducts])
+  }, [initialProducts])
 
   const handleOpenModal = (product) => {
     setSelectedProduct(product)
