@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { Box, Typography } from '@mui/material';
 import Feed from './Feed';
 
-const BASE_URL = 'http://localhost:8000'; // Ensure this matches your backend URL
+const BASE_URL = 'http://127.0.0.1:8000'; 
 
 const SearchResults = () => {
   const location = useLocation();
