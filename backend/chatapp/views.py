@@ -21,7 +21,9 @@ class ConversationListView(APIView):
                 {
                     'id': user.id,
                     'username': user.username,
-                    'email': user.email
+                    'email': user.email,
+                    'profilephoto': user.profilephoto.url if user.profilephoto else None
+
                 }
                 for user in conversation.participants.all()
             ]
