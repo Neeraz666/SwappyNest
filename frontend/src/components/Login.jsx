@@ -3,6 +3,8 @@ import { TextField, Button, IconButton, Checkbox, Typography, Container, Box, Li
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import axios from 'axios';
 import { useAuth } from '../context/authContext';
+import SimpleLayout from '../pages/SimpleLayout';
+
 
 export const Login = () => {
   const [isLoginForm, setIsLoginForm] = useState(true);
@@ -99,128 +101,108 @@ export const Login = () => {
   };
 
   return (
-    <Container maxWidth="xs">
-      <Box
-        display="flex"
-        flexDirection="column"
-        alignItems="center"
-        sx={{ mt: 8, p: 3, boxShadow: 3, borderRadius: 2 }}
-      >
-        <Typography component="h1" variant="h5" mb={2}>
-          {isLoginForm ? 'Login' : 'Signup'}
-        </Typography>
-        <form onSubmit={isLoginForm ? submitLogin : submitSignup}>
-          {error && (
-            <Alert severity="error" sx={{ mt: 2, mb: 2 }}>
-              {error}
-            </Alert>
-          )}
-          <TextField
-            label="Email"
-            variant="outlined"
-            margin="normal"
-            fullWidth
-            required
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          {!isLoginForm && (
-            <>
-              <TextField
-                label="Username"
-                variant="outlined"
-                margin="normal"
-                fullWidth
-                required
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-              />
-              <TextField
-                label="First Name"
-                variant="outlined"
-                margin="normal"
-                fullWidth
-                required
-                value={firstname}
-                onChange={(e) => setFirstname(e.target.value)}
-              />
-              <TextField
-                label="Last Name"
-                variant="outlined"
-                margin="normal"
-                fullWidth
-                required
-                value={lastname}
-                onChange={(e) => setLastname(e.target.value)}
-              />
-              <TextField
-                label="Phone"
-                variant="outlined"
-                margin="normal"
-                fullWidth
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-              />
-              <TextField
-                label="Address"
-                variant="outlined"
-                margin="normal"
-                fullWidth
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-              />
-              <Button
-                variant="outlined"
-                component="label"
-                fullWidth
-                sx={{ mt: 1 }}
-              >
-                Upload Profile Photo
-                <input type="file" hidden onChange={handleFileChange} />
-              </Button>
-
-              {preview && (
-                <Box mt={2} display="flex" justifyContent="center">
-                  <img
-                    src={preview}
-                    alt="Profile Preview"
-                    style={{ width: '100px', height: '100px', borderRadius: '50%' }}
-                  />
-                </Box>
-              )}
-            </>
-          )}
-          <TextField
-            label="Password"
-            variant="outlined"
-            margin="normal"
-            fullWidth
-            required
-            type={showPassword ? 'text' : 'password'}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            InputProps={{
-              endAdornment: (
-                <IconButton
-                  onClick={togglePasswordVisibility}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                >
-                  {showPassword ? <Visibility /> : <VisibilityOff />}
-                </IconButton>
-              ),
-            }}
-          />
-          {!isLoginForm && (
+    <SimpleLayout>
+      <Container maxWidth="xs">
+        <Box
+          display="flex"
+          flexDirection="column"
+          alignItems="center"
+          sx={{ mt: 8, p: 3, boxShadow: 3, borderRadius: 2 }}
+        >
+          <Typography component="h1" variant="h5" mb={2}>
+            {isLoginForm ? 'Login' : 'Signup'}
+          </Typography>
+          <form onSubmit={isLoginForm ? submitLogin : submitSignup}>
+            {error && (
+              <Alert severity="error" sx={{ mt: 2, mb: 2 }}>
+                {error}
+              </Alert>
+            )}
             <TextField
-              label="Confirm Password"
+              label="Email"
+              variant="outlined"
+              margin="normal"
+              fullWidth
+              required
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+            {!isLoginForm && (
+              <>
+                <TextField
+                  label="Username"
+                  variant="outlined"
+                  margin="normal"
+                  fullWidth
+                  required
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                />
+                <TextField
+                  label="First Name"
+                  variant="outlined"
+                  margin="normal"
+                  fullWidth
+                  required
+                  value={firstname}
+                  onChange={(e) => setFirstname(e.target.value)}
+                />
+                <TextField
+                  label="Last Name"
+                  variant="outlined"
+                  margin="normal"
+                  fullWidth
+                  required
+                  value={lastname}
+                  onChange={(e) => setLastname(e.target.value)}
+                />
+                <TextField
+                  label="Phone"
+                  variant="outlined"
+                  margin="normal"
+                  fullWidth
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                />
+                <TextField
+                  label="Address"
+                  variant="outlined"
+                  margin="normal"
+                  fullWidth
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                />
+                <Button
+                  variant="outlined"
+                  component="label"
+                  fullWidth
+                  sx={{ mt: 1 }}
+                >
+                  Upload Profile Photo
+                  <input type="file" hidden onChange={handleFileChange} />
+                </Button>
+
+                {preview && (
+                  <Box mt={2} display="flex" justifyContent="center">
+                    <img
+                      src={preview}
+                      alt="Profile Preview"
+                      style={{ width: '100px', height: '100px', borderRadius: '50%' }}
+                    />
+                  </Box>
+                )}
+              </>
+            )}
+            <TextField
+              label="Password"
               variant="outlined"
               margin="normal"
               fullWidth
               required
               type={showPassword ? 'text' : 'password'}
-              value={password1}
-              onChange={(e) => setPassword1(e.target.value)}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               InputProps={{
                 endAdornment: (
                   <IconButton
@@ -232,46 +214,68 @@ export const Login = () => {
                 ),
               }}
             />
-          )}
-          {isLoginForm && (
-            <Box display="flex" justifyContent="space-between" alignItems="center" mt={2}>
-              <Box display="flex" alignItems="center">
-                <Checkbox />
-                <Typography variant="body2">Remember me</Typography>
+            {!isLoginForm && (
+              <TextField
+                label="Confirm Password"
+                variant="outlined"
+                margin="normal"
+                fullWidth
+                required
+                type={showPassword ? 'text' : 'password'}
+                value={password1}
+                onChange={(e) => setPassword1(e.target.value)}
+                InputProps={{
+                  endAdornment: (
+                    <IconButton
+                      onClick={togglePasswordVisibility}
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                    >
+                      {showPassword ? <Visibility /> : <VisibilityOff />}
+                    </IconButton>
+                  ),
+                }}
+              />
+            )}
+            {isLoginForm && (
+              <Box display="flex" justifyContent="space-between" alignItems="center" mt={2}>
+                <Box display="flex" alignItems="center">
+                  <Checkbox />
+                  <Typography variant="body2">Remember me</Typography>
+                </Box>
+                <Link href="/resetpassword" variant="body2">
+                  Forgot password?
+                </Link>
               </Box>
-              <Link href="/resetpassword" variant="body2">
-                Forgot password?
-              </Link>
+            )}
+            <Button
+              type="submit"
+              fullWidth
+              variant="contained"
+              color="primary"
+              disabled={isLoading}
+              sx={{ mt: 2 }}
+            >
+              {isLoading ? 'Processing...' : (isLoginForm ? 'Login Now' : 'Signup Now')}
+            </Button>
+            <Box mt={2} textAlign="center">
+              <Typography variant="body2">
+                {isLoginForm
+                  ? "Don't have an account? "
+                  : 'Already have an account? '}
+                <Link
+                  component="button"
+                  variant="body2"
+                  onClick={toggleForm}
+                  sx={{ cursor: 'pointer' }}
+                >
+                  {isLoginForm ? 'Signup' : 'Login'}
+                </Link>
+              </Typography>
             </Box>
-          )}
-          <Button
-            type="submit"
-            fullWidth
-            variant="contained"
-            color="primary"
-            disabled={isLoading}
-            sx={{ mt: 2 }}
-          >
-            {isLoading ? 'Processing...' : (isLoginForm ? 'Login Now' : 'Signup Now')}
-          </Button>
-          <Box mt={2} textAlign="center">
-            <Typography variant="body2">
-              {isLoginForm
-                ? "Don't have an account? "
-                : 'Already have an account? '}
-              <Link
-                component="button"
-                variant="body2"
-                onClick={toggleForm}
-                sx={{ cursor: 'pointer' }}
-              >
-                {isLoginForm ? 'Signup' : 'Login'}
-              </Link>
-            </Typography>
-          </Box>
-        </form>
-      </Box>
-    </Container>
+          </form>
+        </Box>
+      </Container>
+    </SimpleLayout>
   );
 };
 

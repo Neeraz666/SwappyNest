@@ -1,102 +1,141 @@
-import React, { useState, useEffect } from 'react';
-import { Box, Typography, Paper, IconButton, TextField, Button, Avatar, CircularProgress } from '@mui/material';
+import React, { useState, useEffect, useRef } from 'react';
+import { Box, Typography, Paper, IconButton, TextField, Button, CircularProgress } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import { useAuth } from '../context/authContext';
+import AvatarComponent from './AvatarComponent';
+
+const BASE_URL = "http://127.0.0.1:8000";
+
+const getFullImageUrl = (imagePath) => {
+  if (!imagePath) return null;
+  return imagePath.startsWith("http") ? imagePath : `${BASE_URL}${imagePath}`;
+};
 
 const ChatBox = ({ chat, onClose }) => {
+  const { userData } = useAuth();
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
-  const [socket, setSocket] = useState(null);
-  const [loading, setLoading] = useState(true); // Loading state for messages
+  const [loading, setLoading] = useState(true);
+  const socketRef = useRef(null); // Store WebSocket instance
 
-  // Fetch previous messages for the selected chat when the component mounts
   useEffect(() => {
-    const token = localStorage.getItem('access_token'); // Assuming the token is stored in localStorage
+    const token = localStorage.getItem('access_token');
+  
+    // Fetch existing messages from the backend
     if (token) {
-      setLoading(true); // Set loading to true before fetching messages
+      setLoading(true);
       fetch(`http://localhost:8000/api/chatapp/conversations/${chat.id}/messages/`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+        headers: { 'Authorization': `Bearer ${token}` },
       })
         .then((response) => response.json())
         .then((data) => {
-          setMessages(data); // Assuming the response contains an array of messages
-          setLoading(false); // Set loading to false after data is fetched
+          setMessages(data);
+          setLoading(false);
         })
         .catch((error) => {
           console.error('Error fetching messages:', error);
-          setLoading(false); // Set loading to false if there's an error
+          setLoading(false);
         });
     }
-
-    // Open WebSocket connection when the component mounts
+  
+    // Establish WebSocket connection
     const ws = new WebSocket(`ws://localhost:8000/ws/chat/${chat.name}/`);
-
+    socketRef.current = ws;
+  
+    // Handle incoming WebSocket messages
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
-      setMessages((prevMessages) => [...prevMessages, { sender: data.sender, text: data.message }]);
+      setMessages((prevMessages) => [
+        ...prevMessages,
+        {
+          sender: data.sender_id === userData.id ? userData.username : chat.otherParticipant.username,
+          text: data.content,
+        },
+      ]);
     };
-
-    setSocket(ws);
-
-    return () => {
-      ws.close(); // Close WebSocket connection when the component unmounts
-    };
+  
+    // Handle WebSocket errors
+    // ws.onerror = (error) => console.error('WebSocket Error:', error);
+  
+    // Cleanup WebSocket on component unmount
+    return () => ws.close();
   }, [chat]);
 
   const handleSendMessage = () => {
-    if (newMessage.trim()) {
-      const token = localStorage.getItem('access_token');
-      if (token) {
-        // Decode the token to get the sender's user ID
-        const decodedToken = JSON.parse(atob(token.split('.')[1])); 
-        const senderId = decodedToken.user_id;
+    if (newMessage.trim() && socketRef.current) {
+      // Send the message via WebSocket
+      socketRef.current.send(
+        JSON.stringify({
+          sender_id: userData.id,
+          receiver_id: chat.otherParticipant.id,
+          message: newMessage,
+        })
+      );
   
-        // Send message with dynamic sender and receiver IDs
-        socket.send(
-          JSON.stringify({
-            message: newMessage,
-            sender_id: senderId,
-            receiver_id: chat.receiverId,  // Use receiverId from selectedChat
-          })
-        );
-  
-        // Update UI with new message
-        setMessages([...messages, { sender: 'user', text: newMessage }]);
-        setNewMessage('');
-      }
+      // Clear the input field
+      setNewMessage('');
     }
   };
-  
 
   return (
     <Paper elevation={3} sx={{ flex: 0.4, borderTop: '1px solid #e0e0e0', backgroundColor: '#ffffff', p: 2, borderRadius: '8px', display: 'flex', flexDirection: 'column' }}>
-      {/* Chat Header */}
       <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ borderBottom: '1px solid #ddd', pb: 1, mb: 2 }}>
-        <Typography variant="h6">Chat with {chat.name}</Typography>
+        <Typography variant="h6">Chat with {chat.otherParticipant.username}</Typography>
         <IconButton onClick={onClose}>
           <CloseIcon />
         </IconButton>
       </Box>
 
-      {/* Chat Messages */}
+      {/* Message List */}
       <Box sx={{ flex: 1, overflowY: 'auto', p: 2, backgroundColor: '#f9f9f9', borderRadius: '8px', mb: 2 }}>
         {loading ? (
-          <CircularProgress sx={{ margin: 'auto', display: 'block' }} /> // Show loading spinner while messages are being fetched
+          <CircularProgress sx={{ margin: 'auto', display: 'block' }} />
         ) : (
-          messages.map((msg, index) => (
-            <Box key={index} display="flex" alignItems="center" justifyContent={msg.sender === 'user' ? 'flex-end' : 'flex-start'} mb={1}>
-              {msg.sender === 'chat' && <Avatar sx={{ mr: 1 }}>C</Avatar>}
-              <Paper sx={{ p: 1, backgroundColor: msg.sender === 'user' ? '#dcf8c6' : '#ffffff', borderRadius: '8px', maxWidth: '70%' }}>
-                <Typography variant="body2">{msg.text}</Typography>
-              </Paper>
-              {msg.sender === 'user' && <Avatar sx={{ ml: 1 }}>U</Avatar>}
-            </Box>
-          ))
+          messages.map((msg, index) => {
+            const isCurrentUser = msg.sender === userData.username;
+            return (
+              <Box
+                key={index}
+                sx={{
+                  display: 'flex',
+                  justifyContent: isCurrentUser ? 'flex-end' : 'flex-start',
+                  mb: 1,
+                  alignItems: 'center',
+                }}
+              >
+                {!isCurrentUser && (
+                  <AvatarComponent
+                    src={getFullImageUrl(chat.otherParticipant.profilephoto)}
+                    userId={chat.otherParticipant.id}
+                    size={32}
+                  />
+                )}
+                <Paper
+                  sx={{
+                    p: 1,
+                    backgroundColor: isCurrentUser ? '#dcf8c6' : '#ffffff',
+                    borderRadius: '8px',
+                    maxWidth: '70%',
+                    ml: isCurrentUser ? 1 : 0,
+                    mr: !isCurrentUser ? 1 : 0,
+                  }}
+                >
+                  <Typography variant="body2">{msg.text}</Typography>
+                </Paper>
+                {isCurrentUser && (
+                  <AvatarComponent
+                    src={getFullImageUrl(userData.profilephoto)}
+                    userId={userData.id}
+                    size={32}
+                  />
+                )}
+              </Box>
+            );
+          })
         )}
       </Box>
 
-      {/* Message Input */}
+      {/* Input Field & Send Button */}
       <Box sx={{ display: 'flex', gap: 1 }}>
         <TextField
           fullWidth
@@ -105,8 +144,11 @@ const ChatBox = ({ chat, onClose }) => {
           sx={{ flex: 1 }}
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
         />
-        <Button variant="contained" color="primary" onClick={handleSendMessage}>Send</Button>
+        <Button variant="contained" color="primary" onClick={handleSendMessage}>
+          Send
+        </Button>
       </Box>
     </Paper>
   );
