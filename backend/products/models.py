@@ -45,6 +45,7 @@ class Product(models.Model):
     purchaseyear = models.DateField()
     condition = models.CharField(max_length=10, choices=CONDITION_CHOICES)
     category = models.CharField(max_length=100, choices=CATEGORY_CHOICES)
+    interested_products = models.JSONField(default=list, blank='True')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

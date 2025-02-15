@@ -22,6 +22,7 @@ class UploadProduct(APIView):
             description = productdata['description']
             purchaseyear = productdata['purchaseyear']
             condition = productdata['condition']
+            interested_products = productdata.get('interested_products', [])
             category = productdata['category']
 
             # Save product without images
@@ -30,12 +31,13 @@ class UploadProduct(APIView):
                 productname=productname,
                 description=description,
                 purchaseyear=purchaseyear,
+                interested_products=interested_products,
                 condition=condition,
                 category=category
             )
 
-            # Handle multiple images
-            images = productdata.getlist('images')
+            # Handle multiple images (get from request.FILES)
+            images = request.FILES.getlist('images')  # Fixed here
             for image in images:
                 Image.objects.create(product=product, image=image)
 
