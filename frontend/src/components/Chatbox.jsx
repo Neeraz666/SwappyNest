@@ -55,7 +55,7 @@ const ChatBox = ({ chat, onClose }) => {
     };
   
     // Handle WebSocket errors
-    ws.onerror = (error) => console.error('WebSocket Error:', error);
+    // ws.onerror = (error) => console.error('WebSocket Error:', error);
   
     // Cleanup WebSocket on component unmount
     return () => ws.close();
