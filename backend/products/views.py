@@ -8,6 +8,7 @@ from .serializers import ProductSerializer
 from rest_framework.response import Response
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.feature_extraction.text import TfidfVectorizer
+import random
 
 
 class UploadProduct(APIView):
@@ -48,8 +49,22 @@ class UploadProduct(APIView):
 
 class ListAllProduct(ListAPIView):
     permission_classes = (permissions.AllowAny, )
-    queryset = Product.objects.all().order_by('id')
+
+    def get_queryset(self):
+        interested_category = self.request.user.interested_products
+        recommended_list = Product.objects.filter(category__in = interested_category)
+        otherlists = Product.objects.all() not in recommended_list
+        combined_list = list(recommended_list) + list(otherlists)
+        random.shuffle(combined_list)
+        return combined_list
+    
     serializer_class = ProductSerializer
+
+
+    # recommended_list = Product.objects.filter(category for category in {'interested_product'})
+    # otherlists = Product.objects.all().order_by('id') not in recommended_list
+    # queryset = random.random(recommended_list + otherlists)
+    # serializer_class = ProductSerializer
 
 # ListCategoricalProduct class is created to get the products of a single category 
 class ListCategoricalProduct(ListAPIView):
