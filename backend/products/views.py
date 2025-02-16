@@ -1,13 +1,14 @@
 from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework import permissions, status
-from .models import Product, Image
+from .models import Product, Image, Interest
 from rest_framework.response import Response
 from rest_framework.generics import ListAPIView
 from .serializers import ProductSerializer
 from rest_framework.response import Response
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.feature_extraction.text import TfidfVectorizer
+import random
 
 
 class UploadProduct(APIView):
@@ -22,6 +23,7 @@ class UploadProduct(APIView):
             description = productdata['description']
             purchaseyear = productdata['purchaseyear']
             condition = productdata['condition']
+            new_interested_products = productdata.get('interested_products', [])
             category = productdata['category']
 
             # Save product without images
@@ -30,24 +32,78 @@ class UploadProduct(APIView):
                 productname=productname,
                 description=description,
                 purchaseyear=purchaseyear,
+                # interested_products=interested_products,
                 condition=condition,
                 category=category
             )
 
-            # Handle multiple images
-            images = productdata.getlist('images')
+            # Handle multiple images (get from request.FILES)
+            images = request.FILES.getlist('images')  # Fixed here
             for image in images:
                 Image.objects.create(product=product, image=image)
+
+
+            # Save interested products
+            try:
+                # Check if user already has an interest object
+                interest = Interest.objects.get(user=currentuser)
+                # Add new interested products to existing list
+                existing_interests = interest.interested_products
+
+                new_interested_products = [item for item in new_interested_products if item not in existing_interests]
+                
+                existing_interests.extend(new_interested_products)
+                interest.interested_products = sorted(existing_interests)
+                interest.save()
+            except Interest.DoesNotExist:
+                Interest.objects.create(user=currentuser, interested_products=new_interested_products)
 
             return Response({'success': 'Your product has been successfully uploaded.'})
         except Exception as e:
             return Response({'error': str(e)}, status=400)
 
 
+
+
+
 class ListAllProduct(ListAPIView):
+
+    """
+        Need to make listings such that most of the products to show are the ones that the user is interested in and 
+        the rest are general products. Also, the products should be shuffled so that the user doesn't see the same everytime. 
+    """
+
     permission_classes = (permissions.AllowAny, )
-    queryset = Product.objects.all().order_by('id')
+
+    def get_queryset(self):
+        a = random.random()  # Seed the random number generator
+        random.seed(a)
+        if self.request.user.is_authenticated:
+            # Get the interested products of the user
+            interested_category = Interest.objects.filter(user = self.request.user).values_list('interested_products', flat = True)
+            interested_category = [category for sublist in interested_category for category in sublist]  # Flatten the list
+            interested_category = list(interested_category)
+
+            # Get the products of the interested categories and combine with general
+            recommended_list = Product.objects.filter(category__in = interested_category)
+            allproduct = Product.objects.all()
+            generallist = allproduct.exclude(id__in = recommended_list)
+            combined_list = list(recommended_list) + list(generallist)  # Combine the two lists
+
+            # Shuffle the combined list
+            random.shuffle(combined_list)
+            return combined_list
+        
+        # If user is not authenticated, return all products in random order
+        allproduct = list(Product.objects.all())
+        random.shuffle(allproduct)
+        return (allproduct)
+    
     serializer_class = ProductSerializer
+
+
+
+
 
 # ListCategoricalProduct class is created to get the products of a single category 
 class ListCategoricalProduct(ListAPIView):
@@ -65,6 +121,10 @@ class ListCategoricalProduct(ListAPIView):
         
         # If category_slug doesn't exits, none will be returned
         return Product.objects.none()
+
+
+
+
 
 class ProductSearchView(ListAPIView):
     permission_classes = (permissions.AllowAny,)

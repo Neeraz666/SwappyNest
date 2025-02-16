@@ -40,7 +40,6 @@ class Product(models.Model):
 
     user = models.ForeignKey(UserAccount, on_delete=models.CASCADE)
     productname = models.CharField(max_length=100)
-    # productpic = models.ImageField(upload_to='productpics')
     description = models.TextField(blank=True)
     purchaseyear = models.DateField()
     condition = models.CharField(max_length=10, choices=CONDITION_CHOICES)
@@ -59,3 +58,9 @@ class Image(models.Model):
     def __str__(self):
         return f"{self.uuid}--{self.product.productname}"
     
+class Interest(models.Model):
+    user = models.ForeignKey(UserAccount, on_delete=models.CASCADE)
+    interested_products = models.JSONField(default=list, blank='True')
+    
+    def __str__(self):
+        return f"{self.user}'s interested products"
