@@ -1,14 +1,14 @@
 from django.shortcuts import render
 from rest_framework.views import APIView
-from rest_framework import permissions, status
+from rest_framework import permissions
 from .models import Product, Image, Interest
 from rest_framework.response import Response
-from rest_framework.generics import ListAPIView
-from .serializers import ProductSerializer
+from rest_framework.generics import ListAPIView, RetrieveAPIView
+from .serializers import ProductSerializer, InterestSerializer
 from rest_framework.response import Response
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.feature_extraction.text import TfidfVectorizer
-import random
+import random, json
 
 
 class UploadProduct(APIView):
@@ -16,6 +16,9 @@ class UploadProduct(APIView):
 
     def post(self, request):
         try:
+            print("Request Data:", request.data)
+            print("Request Files:", request.FILES)
+
             currentuser = request.user
             productdata = request.data
 
@@ -23,47 +26,65 @@ class UploadProduct(APIView):
             description = productdata['description']
             purchaseyear = productdata['purchaseyear']
             condition = productdata['condition']
-            new_interested_products = productdata.get('interested_products', [])
+            # Parse the 'interested_products' string into a list
+            new_interested_products = json.loads(productdata.get('interested_products', '[]'))
             category = productdata['category']
 
+            print("Product Name:", productname)
+            print("Description:", description)
+            print("Purchase Year:", purchaseyear)
+            print("Condition:", condition)
+            print("Category:", category)
+            print("Interested Products:", new_interested_products)
+
             # Save product without images
+            print("Saving Product...")
             product = Product.objects.create(
                 user=currentuser,
                 productname=productname,
                 description=description,
                 purchaseyear=purchaseyear,
-                # interested_products=interested_products,
                 condition=condition,
                 category=category
             )
 
             # Handle multiple images (get from request.FILES)
             images = request.FILES.getlist('images')  # Fixed here
+            print("Saving Images...")
             for image in images:
+                print("Image:", image)
                 Image.objects.create(product=product, image=image)
 
-
-            # Save interested products
+            # Handle the interested products
             try:
-                # Check if user already has an interest object
+                # Check if the user already has an interest object
                 interest = Interest.objects.get(user=currentuser)
-                # Add new interested products to existing list
+                # Extract the existing interested products (already a list)
                 existing_interests = interest.interested_products
 
+                # Ensure new_interested_products are not duplicates
                 new_interested_products = [item for item in new_interested_products if item not in existing_interests]
-                
+
+                # Add the new products to the existing list and sort them
                 existing_interests.extend(new_interested_products)
                 interest.interested_products = sorted(existing_interests)
                 interest.save()
             except Interest.DoesNotExist:
+                # If no interest object exists, create a new one
                 Interest.objects.create(user=currentuser, interested_products=new_interested_products)
 
             return Response({'success': 'Your product has been successfully uploaded.'})
         except Exception as e:
+            # Print error message for debugging
+            print("Error:", str(e))
             return Response({'error': str(e)}, status=400)
+        
+class InterestDetailView(RetrieveAPIView):
+    serializer_class = InterestSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
-
-
+    def get_object(self):
+        return Interest.objects.filter(user=self.request.user).first()  
 
 
 class ListAllProduct(ListAPIView):

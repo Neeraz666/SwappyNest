@@ -1,5 +1,5 @@
 from rest_framework.serializers import ModelSerializer, DateField, DateTimeField
-from .models import Product, Image
+from .models import Product, Image, Interest
 from user.serializers import UserSerializer
 
 class ImageSerializer(ModelSerializer):
@@ -21,4 +21,9 @@ class ProductSerializer(ModelSerializer):
 
     class Meta:
         model = Product
+        fields = '__all__'
+        
+class InterestSerializer(ModelSerializer):
+    class Meta:
+        model = Interest
         fields = '__all__'
