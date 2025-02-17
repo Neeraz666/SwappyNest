@@ -221,7 +221,7 @@ const UploadProduct = () => {
           </FormControl>
 
           <FormControl fullWidth sx={{ marginBottom: "1rem" }}>
-            <InputLabel>Interested Products</InputLabel>
+            <InputLabel>Interested Categories</InputLabel>
             <Select
               label="Interested Products"
               name="interested_products"
