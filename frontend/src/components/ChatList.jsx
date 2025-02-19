@@ -71,16 +71,17 @@ const ChatList = () => {
   }
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
+    <Box sx={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
       <Paper
         elevation={3}
         sx={{
-          height: selectedChat ? "60%" : "100%",
+          flex: selectedChat ? "1 1 50%" : "1 1 100%", // Allow flexible growth
+          minHeight: "300px", // Ensure a minimum height
           overflowY: "auto",
           borderRadius: "8px",
           p: 2,
           backgroundColor: "#fff",
-          transition: "height 0.3s ease-in-out",
+          transition: "flex 0.3s ease-in-out",
         }}
       >
         <Typography variant="h6" sx={{ mb: 2 }}>
@@ -93,7 +94,7 @@ const ChatList = () => {
             {conversations.map((chat) => {
               const avatarSrc = chat.otherParticipant.profilephoto
                 ? getFullImageUrl(chat.otherParticipant.profilephoto)
-                : genericProfileImage
+                : genericProfileImage;
 
               return (
                 <ListItem key={chat.id} disablePadding>
@@ -104,7 +105,7 @@ const ChatList = () => {
                     <ListItemText primary={chat.otherParticipant.username} />
                   </ListItemButton>
                 </ListItem>
-              )
+              );
             })}
           </List>
         )}
@@ -113,9 +114,9 @@ const ChatList = () => {
       {selectedChat && (
         <Box
           sx={{
-            height: "40%",
+            flex: "1 1 50%", // Allow flexible height adjustment
             mt: 2,
-            transition: "height 0.3s ease-in-out",
+            transition: "flex 0.3s ease-in-out",
             overflow: "hidden",
           }}
         >
