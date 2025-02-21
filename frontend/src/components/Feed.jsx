@@ -1,11 +1,12 @@
-"use client"
-
 import { useEffect, useState, useCallback, useRef } from "react"
 import { Box, Typography, IconButton, Card, CardContent, CardActions, CircularProgress, Container } from "@mui/material"
 import { FavoriteBorder, Share } from "@mui/icons-material"
+import { useAuth } from '../context/authContext';
 import genericProfileImage from "../assets/profile.png"
 import ProductModal from "./ProductModal"
 import AvatarComponent from "./AvatarComponent"
+import SwapOfferModal from "./SawpOfferModal"
+
 
 const BASE_URL = "http://127.0.0.1:8000"
 
@@ -17,8 +18,15 @@ export default function Feed({ initialProducts = [], searchQuery, categorySlug }
   const [loading, setLoading] = useState(false)
   const [hasMore, setHasMore] = useState(true)
   const [nextPageUrl, setNextPageUrl] = useState(null)
+  const { isAuth, userData } = useAuth()
   const loader = useRef(null)
   const observer = useRef(null)
+  const [swapOfferModalOpen, setSwapOfferModalOpen] = useState(false)
+
+  const handleOpenSwapOffer = (product) => {
+    setSelectedProduct(product)
+    setSwapOfferModalOpen(true)
+  }
 
   const lastProductElementRef = useCallback(
     (node) => {
@@ -164,6 +172,8 @@ export default function Feed({ initialProducts = [], searchQuery, categorySlug }
       )
     }
 
+
+
     return (
       <Box
         sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1, height: 300, marginTop: 1, cursor: "pointer" }}
@@ -255,6 +265,7 @@ export default function Feed({ initialProducts = [], searchQuery, categorySlug }
         {products.map((product, index) => {
           const { id, productname, description, purchaseyear, condition, created_at, user, images, category } = product
           const avatarSrc = user.profilephoto ? getFullImageUrl(user.profilephoto) : genericProfileImage
+          const isProductOwner = userData?.id === product.user.id;
 
           return (
             <Card
@@ -363,31 +374,26 @@ export default function Feed({ initialProducts = [], searchQuery, categorySlug }
                 </IconButton>
 
                 <IconButton
+                  disabled={!isAuth || isProductOwner}
                   aria-label="place an offer"
                   sx={{
                     marginLeft: "auto",
                     marginRight: "auto",
                     padding: 0,
-                    color: "white", // Changed to white for better contrast
+                    color: "white",
                     border: "1px solid",
                     borderColor: "primary.main",
                     borderRadius: "8px",
-                    backgroundColor: "primary.main", // More vibrant background
-                    boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)", // Added shadow for depth
-                    transition: "all 0.3s ease", // Smooth transition for hover effects
+                    backgroundColor: isProductOwner ? "grey" : "primary.main",
+                    boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
+                    transition: "all 0.3s ease",
                     "&:hover": {
-                      backgroundColor: "primary.dark",
-                      color: "white",
-                      borderColor: "primary.dark",
-                      transform: "translateY(-2px)", // Slight lift on hover
-                      boxShadow: "0px 6px 8px rgba(0, 0, 0, 0.15)", // Enhanced shadow on hover
-                    },
-                    "&:active": {
-                      transform: "translateY(0)", // Reset lift on click
-                      boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)", // Reset shadow on click
+                      backgroundColor: isProductOwner ? "grey" : "primary.dark",
+                      transform: isProductOwner ? "none" : "translateY(-2px)",
+                      boxShadow: isProductOwner ? "none" : "0px 6px 8px rgba(0, 0, 0, 0.15)",
                     },
                   }}
-                  onClick={() => handleOpenModal(product)}
+                  onClick={() => !isProductOwner && handleOpenSwapOffer(product)}
                 >
                   <Typography
                     variant="button"
@@ -395,8 +401,8 @@ export default function Feed({ initialProducts = [], searchQuery, categorySlug }
                       fontSize: "0.875rem",
                       fontWeight: "bold",
                       padding: "6px 12px",
-                      textTransform: "uppercase", // Uppercase text for emphasis
-                      letterSpacing: "0.05em", // Slight letter spacing for better readability
+                      textTransform: "uppercase",
+                      letterSpacing: "0.05em",
                     }}
                   >
                     Place an Offer
@@ -424,25 +430,30 @@ export default function Feed({ initialProducts = [], searchQuery, categorySlug }
           </Typography>
         )}
       </Box>
+      <SwapOfferModal
+        isOpen={swapOfferModalOpen}
+        onClose={() => setSwapOfferModalOpen(false)}
+        selectedProduct={selectedProduct}
+      />
       <ProductModal
         open={modalOpen}
         onClose={handleCloseModal}
         product={
           selectedProduct
             ? {
-                name: selectedProduct.productname,
-                uploadDate: selectedProduct.created_at,
-                condition: selectedProduct.condition,
-                purchaseYear: selectedProduct.purchaseyear,
-                description: selectedProduct.description,
-                images: selectedProduct.images.map((img) => getFullImageUrl(img.image)),
-                uploadedBy: selectedProduct.user.username,
-                userProfilePic: selectedProduct.user.profilephoto
-                  ? getFullImageUrl(selectedProduct.user.profilephoto)
-                  : genericProfileImage,
-                userId: selectedProduct.user.id,
-                category: selectedProduct.category,
-              }
+              name: selectedProduct.productname,
+              uploadDate: selectedProduct.created_at,
+              condition: selectedProduct.condition,
+              purchaseYear: selectedProduct.purchaseyear,
+              description: selectedProduct.description,
+              images: selectedProduct.images.map((img) => getFullImageUrl(img.image)),
+              uploadedBy: selectedProduct.user.username,
+              userProfilePic: selectedProduct.user.profilephoto
+                ? getFullImageUrl(selectedProduct.user.profilephoto)
+                : genericProfileImage,
+              userId: selectedProduct.user.id,
+              category: selectedProduct.category,
+            }
             : null
         }
       />

@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useEffect } from "react"
 import {
   Box,
@@ -75,7 +73,7 @@ const ChatList = () => {
       <Paper
         elevation={3}
         sx={{
-          flex: selectedChat ? "1 1 50%" : "1 1 100%", // Allow flexible growth
+          flex: selectedChat ? "1 1 40%" : "1 1 100%", // Allow flexible growth
           minHeight: "300px", // Ensure a minimum height
           overflowY: "auto",
           borderRadius: "8px",
