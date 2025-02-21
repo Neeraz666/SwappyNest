@@ -33,20 +33,6 @@ const SwapOfferModal = ({ isOpen, onClose, selectedProduct }) => {
     }
   }, [isOpen, userData?.id])
 
-  useEffect(() => {
-    if (isOpen && userData?.id && selectedProduct?.user?.id) {
-      const conversationName = `conversation_${Math.min(userData.id, selectedProduct.user.id)}_${Math.max(userData.id, selectedProduct.user.id)}`
-      const ws = new WebSocket(`ws://localhost:8000/ws/chat/${conversationName}/`)
-      socketRef.current = ws
-
-      return () => {
-        if (socketRef.current) {
-          socketRef.current.close()
-        }
-      }
-    }
-  }, [isOpen, userData?.id, selectedProduct?.user?.id])
-
   const fetchUserProducts = async () => {
     try {
       const response = await axios.get(`${BASE_URL}/api/user/${userData.id}/products`)
@@ -101,47 +87,62 @@ const SwapOfferModal = ({ isOpen, onClose, selectedProduct }) => {
   }
 
   const handleSubmit = async () => {
-    // Send initial message
-    sendMessage("I want to share:")
+    // Establish WebSocket connection
+    const conversationName = `conversation_${Math.min(userData.id, selectedProduct.user.id)}_${Math.max(userData.id, selectedProduct.user.id)}`
+    const ws = new WebSocket(`ws://localhost:8000/ws/chat/${conversationName}/`)
+    socketRef.current = ws
 
-    // Send selected products
-    const selectedProductsDetails = userProducts.filter((product) => selectedProducts.includes(product.id))
-    selectedProductsDetails.forEach((product) => {
-      const productMessage = JSON.stringify({
+    ws.onopen = () => {
+      // Send initial message
+      sendMessage("I want to share:")
+
+      // Send selected products
+      const selectedProductsDetails = userProducts.filter((product) => selectedProducts.includes(product.id))
+      selectedProductsDetails.forEach((product) => {
+        const productMessage = JSON.stringify({
+          type: "product",
+          data: {
+            id: product.id,
+            name: product.productname,
+            condition: product.condition,
+            purchaseYear: product.purchaseyear,
+            image: getFullImageUrl(product.images[0]?.image),
+          },
+        })
+        sendMessage(productMessage)
+      })
+
+      // Send "With your product" message
+      sendMessage("With your product:")
+
+      // Send the selected product information
+      const selectedProductMessage = JSON.stringify({
         type: "product",
         data: {
-          id: product.id,
-          name: product.productname,
-          condition: product.condition,
-          purchaseYear: product.purchaseyear,
-          image: getFullImageUrl(product.images[0]?.image),
+          id: selectedProduct.id,
+          name: selectedProduct.productname,
+          condition: selectedProduct.condition,
+          purchaseYear: selectedProduct.purchaseyear,
+          image: getFullImageUrl(selectedProduct.images[0]?.image),
         },
       })
-      sendMessage(productMessage)
-    })
+      sendMessage(selectedProductMessage)
 
-    // Send "With your product" message
-    sendMessage("With your product:")
+      // Send the custom note if it's not empty
+      if (note.trim()) {
+        sendMessage(note)
+      }
 
-    // Send the selected product information
-    const selectedProductMessage = JSON.stringify({
-      type: "product",
-      data: {
-        id: selectedProduct.id,
-        name: selectedProduct.productname,
-        condition: selectedProduct.condition,
-        purchaseYear: selectedProduct.purchaseyear,
-        image: getFullImageUrl(selectedProduct.images[0]?.image),
-      },
-    })
-    sendMessage(selectedProductMessage)
-
-    // Send the custom note if it's not empty
-    if (note.trim()) {
-      sendMessage(note)
+      onClose()
     }
 
-    onClose()
+    ws.onerror = (error) => {
+      console.error("WebSocket error:", error)
+    }
+
+    ws.onclose = () => {
+      console.log("WebSocket connection closed")
+    }
   }
 
   return (
@@ -266,4 +267,3 @@ const SwapOfferModal = ({ isOpen, onClose, selectedProduct }) => {
 }
 
 export default SwapOfferModal
-
