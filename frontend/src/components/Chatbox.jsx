@@ -12,11 +12,13 @@ import {
   Card,
   CardMedia,
   CardContent,
+  Snackbar,
+  Alert,
 } from "@mui/material"
 import CloseIcon from "@mui/icons-material/Close"
 import { useAuth } from "../context/authContext"
 import AvatarComponent from "./AvatarComponent"
-import ProductModal from "./ProductModal" // Import the ProductModal component
+import ProductModal from "./ProductModal"
 
 const BASE_URL = "http://127.0.0.1:8000"
 
@@ -30,68 +32,159 @@ const ChatBox = ({ chat, onClose }) => {
   const [messages, setMessages] = useState([])
   const [newMessage, setNewMessage] = useState("")
   const [loading, setLoading] = useState(true)
+  const [sending, setSending] = useState(false)
   const socketRef = useRef(null)
   const messagesEndRef = useRef(null)
   const [productModalOpen, setProductModalOpen] = useState(false)
   const [selectedModalProduct, setSelectedModalProduct] = useState(null)
+  const [connectionError, setConnectionError] = useState(false)
+  const [snackbarOpen, setSnackbarOpen] = useState(false)
+  const [snackbarMessage, setSnackbarMessage] = useState("")
+  const [snackbarSeverity, setSnackbarSeverity] = useState("error")
+  const reconnectTimeoutRef = useRef(null)
 
   const scrollToBottom = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth", block: "end" })
+    }
   }, [])
+
+  const showSnackbar = useCallback((message, severity = "error") => {
+    setSnackbarMessage(message)
+    setSnackbarSeverity(severity)
+    setSnackbarOpen(true)
+  }, [])
+
+  const connectWebSocket = useCallback(() => {
+    if (!chat || !chat.id) {
+      console.error("Chat or chat ID is undefined. Cannot establish WebSocket connection.")
+      showSnackbar("Error: Unable to connect to chat. Please try again later.")
+      return null
+    }
+
+    if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+      console.log("WebSocket already connected")
+      return socketRef.current
+    }
+
+    console.log("Attempting to connect WebSocket")
+    const participantIds = chat.participants
+      .map((p) => p.id)
+      .sort()
+      .join("_")
+    const ws = new WebSocket(`ws://localhost:8000/ws/chat/conversation_${participantIds}/`)
+    socketRef.current = ws
+
+    ws.onopen = () => {
+      console.log("WebSocket connected successfully")
+      setConnectionError(false)
+    }
+
+    ws.onmessage = (event) => {
+      console.log("WebSocket message received:", event.data)
+      const data = JSON.parse(event.data)
+      setMessages((prevMessages) => {
+        const messageExists = prevMessages.some((msg) => msg.id === data.id)
+        if (!messageExists) {
+          const newMessage = {
+            id: data.id,
+            sender: data.sender_id === userData.id ? userData.username : chat.otherParticipant.username,
+            text: data.content,
+            timestamp: data.timestamp,
+          }
+          setTimeout(scrollToBottom, 100) // Scroll after the state update
+          return [...prevMessages, newMessage]
+        }
+        return prevMessages
+      })
+    }
+
+    ws.onerror = (error) => {
+      console.error("WebSocket error:", error)
+      setConnectionError(true)
+      showSnackbar("Error in chat connection")
+    }
+
+    ws.onclose = (event) => {
+      console.log("WebSocket closed:", event)
+      if (!event.wasClean) {
+        setConnectionError(true)
+        if (!reconnectTimeoutRef.current) {
+          showSnackbar("Disconnected from chat. Attempting to reconnect...")
+          reconnectTimeoutRef.current = setTimeout(() => {
+            reconnectTimeoutRef.current = null
+            connectWebSocket()
+          }, 5000)
+        }
+      }
+    }
+
+    return ws
+  }, [chat, userData.id, userData.username, scrollToBottom, showSnackbar])
 
   useEffect(() => {
     const token = localStorage.getItem("access_token")
 
-    if (token) {
+    if (token && chat && chat.id) {
       setLoading(true)
       fetch(`http://localhost:8000/api/chatapp/conversations/${chat.id}/messages/`, {
         headers: { Authorization: `Bearer ${token}` },
       })
         .then((response) => response.json())
         .then((data) => {
-          setMessages(data)
+          setMessages(data.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp)))
           setLoading(false)
-          scrollToBottom()
+          setTimeout(scrollToBottom, 100) // Scroll after the messages are rendered
         })
         .catch((error) => {
           console.error("Error fetching messages:", error)
           setLoading(false)
+          setConnectionError(true)
+          showSnackbar("Error loading messages")
         })
     }
 
-    const ws = new WebSocket(`ws://localhost:8000/ws/chat/${chat.name}/`)
-    socketRef.current = ws
+    const ws = connectWebSocket()
 
-    ws.onmessage = (event) => {
-      const data = JSON.parse(event.data)
-      setMessages((prevMessages) => [
-        ...prevMessages,
-        {
-          sender: data.sender_id === userData.id ? userData.username : chat.otherParticipant.username,
-          text: data.content,
-        },
-      ])
-      scrollToBottom()
+    return () => {
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current)
+      }
+      if (ws) {
+        console.log("Closing WebSocket connection")
+        ws.close()
+      }
     }
-
-    return () => ws.close()
-  }, [chat, userData.id, userData.username, scrollToBottom])
+  }, [chat, scrollToBottom, connectWebSocket, showSnackbar])
 
   useEffect(() => {
     scrollToBottom()
   }, [scrollToBottom])
 
-  const handleSendMessage = () => {
-    if (newMessage.trim() && socketRef.current) {
-      socketRef.current.send(
-        JSON.stringify({
+  const handleSendMessage = async () => {
+    if (newMessage.trim() && socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+      setSending(true)
+      try {
+        const messageData = {
           sender_id: userData.id,
           receiver_id: chat.otherParticipant.id,
           message: newMessage,
-        }),
-      )
-
-      setNewMessage("")
+        }
+        socketRef.current.send(JSON.stringify(messageData))
+        setNewMessage("")
+        setTimeout(scrollToBottom, 100) // Scroll after sending the message
+      } catch (error) {
+        console.error("Error sending message:", error)
+        showSnackbar("Error sending message")
+        setConnectionError(true)
+      } finally {
+        setSending(false)
+      }
+    } else {
+      console.error("WebSocket is not open. Current state:", socketRef.current?.readyState)
+      showSnackbar("Connection lost. Attempting to reconnect...")
+      setConnectionError(true)
+      connectWebSocket()
     }
   }
 
@@ -124,7 +217,7 @@ const ChatBox = ({ chat, onClose }) => {
           <Card sx={{ maxWidth: 345, my: 1, cursor: "pointer" }} onClick={() => handleProductClick(product, msg)}>
             <CardMedia component="img" height="140" image={getFullImageUrl(product.image)} alt={product.name} />
             <CardContent>
-              <Typography gutterBottom  component="div">
+              <Typography gutterBottom variant="h6" component="div">
                 {product.name}
               </Typography>
               <Typography variant="body2" color="text.secondary">
@@ -136,8 +229,16 @@ const ChatBox = ({ chat, onClose }) => {
       }
     } catch (e) {
       // If parsing fails, it's a regular text message
-      return <Typography variant="body2">{msg.text}</Typography>
     }
+    return <Typography variant="body2">{msg.text}</Typography>
+  }
+
+  if (!chat || !chat.id) {
+    return (
+      <Paper elevation={3} sx={{ p: 2, textAlign: "center" }}>
+        <Typography>No chat selected or chat information is incomplete.</Typography>
+      </Paper>
+    )
   }
 
   return (
@@ -172,7 +273,7 @@ const ChatBox = ({ chat, onClose }) => {
               const isCurrentUser = msg.sender === userData.username
               return (
                 <Box
-                  key={index}
+                  key={msg.id || index}
                   sx={{
                     display: "flex",
                     justifyContent: isCurrentUser ? "flex-end" : "flex-start",
@@ -217,14 +318,25 @@ const ChatBox = ({ chat, onClose }) => {
             size="small"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
+            onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSendMessage()}
+            disabled={sending || connectionError}
           />
-          <Button variant="contained" color="primary" onClick={handleSendMessage}>
-            Send
+          <Button variant="contained" color="primary" onClick={handleSendMessage} disabled={sending || connectionError}>
+            {sending ? <CircularProgress size={24} /> : "Send"}
           </Button>
         </Box>
       </Paper>
       <ProductModal open={productModalOpen} onClose={() => setProductModalOpen(false)} product={selectedModalProduct} />
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={6000}
+        onClose={() => setSnackbarOpen(false)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert onClose={() => setSnackbarOpen(false)} severity={snackbarSeverity} sx={{ width: "100%" }}>
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </>
   )
 }

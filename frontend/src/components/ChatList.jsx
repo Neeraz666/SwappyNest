@@ -1,4 +1,6 @@
-import { useState, useEffect } from "react"
+"use client"
+
+import { useState, useEffect, useRef } from "react"
 import {
   Box,
   Typography,
@@ -22,6 +24,7 @@ const ChatList = () => {
   const [selectedChat, setSelectedChat] = useState(null)
   const [conversations, setConversations] = useState([])
   const [loading, setLoading] = useState(true)
+  const socketRef = useRef(null)
 
   useEffect(() => {
     if (isAuth && userData) {
@@ -46,12 +49,66 @@ const ChatList = () => {
             console.error("Error fetching conversations:", error)
             setLoading(false)
           })
+
+        // Set up WebSocket connection
+        const ws = new WebSocket(`ws://localhost:8000/ws/chat/list/${userData.id}/`)
+        socketRef.current = ws
+
+        ws.onmessage = (event) => {
+          const data = JSON.parse(event.data)
+          if (data.type === "update_conversation") {
+            updateConversation(data.conversation)
+          }
+        }
+
+        return () => {
+          if (socketRef.current) {
+            socketRef.current.close()
+          }
+        }
       } else {
         console.error("No access token found")
         setLoading(false)
       }
     }
   }, [isAuth, userData])
+
+  const updateConversation = (updatedConversation) => {
+    setConversations((prevConversations) => {
+      const existingIndex = prevConversations.findIndex((conv) => conv.id === updatedConversation.id)
+      if (existingIndex !== -1) {
+        // Update existing conversation
+        const updatedConversations = [...prevConversations]
+        updatedConversations[existingIndex] = {
+          ...updatedConversation,
+          otherParticipant: updatedConversation.participants.find((p) => p.id !== userData.id),
+        }
+        return updatedConversations
+      } else {
+        // Add new conversation
+        const newConversation = {
+          ...updatedConversation,
+          otherParticipant: updatedConversation.participants.find((p) => p.id !== userData.id),
+        }
+        return [newConversation, ...prevConversations]
+      }
+    })
+  }
+
+  const getLastMessagePreview = (lastMessage) => {
+    if (!lastMessage) return "No messages yet"
+
+    try {
+      const parsedMessage = JSON.parse(lastMessage)
+      if (parsedMessage.type === "product") {
+        return "Shared a product"
+      }
+    } catch (e) {
+      // If parsing fails, it's a regular text message
+    }
+
+    return lastMessage.length > 30 ? `${lastMessage.substring(0, 30)}...` : lastMessage
+  }
 
   if (!isAuth) {
     return <Typography variant="h6">You need to log in first</Typography>
@@ -62,10 +119,10 @@ const ChatList = () => {
   }
 
   const getFullImageUrl = (imagePath) => {
-    if (imagePath.startsWith("http")) {
+    if (imagePath && imagePath.startsWith("http")) {
       return imagePath
     }
-    return `${BASE_URL}${imagePath}`
+    return imagePath ? `${BASE_URL}${imagePath}` : genericProfileImage
   }
 
   return (
@@ -73,8 +130,8 @@ const ChatList = () => {
       <Paper
         elevation={3}
         sx={{
-          flex: selectedChat ? "1 1 40%" : "1 1 100%", // Allow flexible growth
-          minHeight: "300px", // Ensure a minimum height
+          flex: selectedChat ? "1 1 40%" : "1 1 100%",
+          minHeight: "300px",
           overflowY: "auto",
           borderRadius: "8px",
           p: 2,
@@ -90,9 +147,7 @@ const ChatList = () => {
         ) : (
           <List>
             {conversations.map((chat) => {
-              const avatarSrc = chat.otherParticipant.profilephoto
-                ? getFullImageUrl(chat.otherParticipant.profilephoto)
-                : genericProfileImage;
+              const avatarSrc = getFullImageUrl(chat.otherParticipant.profilephoto)
 
               return (
                 <ListItem key={chat.id} disablePadding>
@@ -100,10 +155,13 @@ const ChatList = () => {
                     <ListItemAvatar>
                       <AvatarComponent src={avatarSrc} userId={chat.otherParticipant.id} size={40} disabled={true} />
                     </ListItemAvatar>
-                    <ListItemText primary={chat.otherParticipant.username} />
+                    <ListItemText
+                      primary={chat.otherParticipant.username}
+                      secondary={getLastMessagePreview(chat.last_message)}
+                    />
                   </ListItemButton>
                 </ListItem>
-              );
+              )
             })}
           </List>
         )}
@@ -112,7 +170,7 @@ const ChatList = () => {
       {selectedChat && (
         <Box
           sx={{
-            flex: "1 1 50%", // Allow flexible height adjustment
+            flex: "1 1 50%",
             mt: 2,
             transition: "flex 0.3s ease-in-out",
             overflow: "hidden",
