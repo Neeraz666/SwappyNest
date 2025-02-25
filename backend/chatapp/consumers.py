@@ -1,10 +1,12 @@
-import json
+import json, os, django
 from channels.generic.websocket import AsyncWebsocketConsumer
 from django.contrib.auth import get_user_model
 from asgiref.sync import sync_to_async
-from .models import Conversation, Message
-from django.db.models import Q
 
+from django.db.models import Q
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "swappynest.settings")
+django.setup()  # Ensure Django is set up before importing models
+from .models import Conversation, Message
 User = get_user_model()
 
 class ChatConsumer(AsyncWebsocketConsumer):

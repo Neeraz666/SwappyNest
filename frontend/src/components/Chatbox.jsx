@@ -12,8 +12,6 @@ import {
   Card,
   CardMedia,
   CardContent,
-  Snackbar,
-  Alert,
 } from "@mui/material"
 import CloseIcon from "@mui/icons-material/Close"
 import { useAuth } from "../context/authContext"
@@ -38,9 +36,6 @@ const ChatBox = ({ chat, onClose }) => {
   const [productModalOpen, setProductModalOpen] = useState(false)
   const [selectedModalProduct, setSelectedModalProduct] = useState(null)
   const [connectionError, setConnectionError] = useState(false)
-  const [snackbarOpen, setSnackbarOpen] = useState(false)
-  const [snackbarMessage, setSnackbarMessage] = useState("")
-  const [snackbarSeverity, setSnackbarSeverity] = useState("error")
   const reconnectTimeoutRef = useRef(null)
 
   const scrollToBottom = useCallback(() => {
@@ -49,16 +44,9 @@ const ChatBox = ({ chat, onClose }) => {
     }
   }, [])
 
-  const showSnackbar = useCallback((message, severity = "error") => {
-    setSnackbarMessage(message)
-    setSnackbarSeverity(severity)
-    setSnackbarOpen(true)
-  }, [])
-
   const connectWebSocket = useCallback(() => {
     if (!chat || !chat.id) {
       console.error("Chat or chat ID is undefined. Cannot establish WebSocket connection.")
-      showSnackbar("Error: Unable to connect to chat. Please try again later.")
       return null
     }
 
@@ -99,18 +87,11 @@ const ChatBox = ({ chat, onClose }) => {
       })
     }
 
-    ws.onerror = (error) => {
-      console.error("WebSocket error:", error)
-      setConnectionError(true)
-      showSnackbar("Error in chat connection")
-    }
-
     ws.onclose = (event) => {
       console.log("WebSocket closed:", event)
       if (!event.wasClean) {
         setConnectionError(true)
         if (!reconnectTimeoutRef.current) {
-          showSnackbar("Disconnected from chat. Attempting to reconnect...")
           reconnectTimeoutRef.current = setTimeout(() => {
             reconnectTimeoutRef.current = null
             connectWebSocket()
@@ -120,7 +101,7 @@ const ChatBox = ({ chat, onClose }) => {
     }
 
     return ws
-  }, [chat, userData.id, userData.username, scrollToBottom, showSnackbar])
+  }, [chat, userData.id, userData.username, scrollToBottom])
 
   useEffect(() => {
     const token = localStorage.getItem("access_token")
@@ -140,7 +121,6 @@ const ChatBox = ({ chat, onClose }) => {
           console.error("Error fetching messages:", error)
           setLoading(false)
           setConnectionError(true)
-          showSnackbar("Error loading messages")
         })
     }
 
@@ -155,7 +135,7 @@ const ChatBox = ({ chat, onClose }) => {
         ws.close()
       }
     }
-  }, [chat, scrollToBottom, connectWebSocket, showSnackbar])
+  }, [chat, scrollToBottom, connectWebSocket])
 
   useEffect(() => {
     scrollToBottom()
@@ -175,14 +155,12 @@ const ChatBox = ({ chat, onClose }) => {
         setTimeout(scrollToBottom, 100) // Scroll after sending the message
       } catch (error) {
         console.error("Error sending message:", error)
-        showSnackbar("Error sending message")
         setConnectionError(true)
       } finally {
         setSending(false)
       }
     } else {
       console.error("WebSocket is not open. Current state:", socketRef.current?.readyState)
-      showSnackbar("Connection lost. Attempting to reconnect...")
       setConnectionError(true)
       connectWebSocket()
     }
@@ -327,16 +305,6 @@ const ChatBox = ({ chat, onClose }) => {
         </Box>
       </Paper>
       <ProductModal open={productModalOpen} onClose={() => setProductModalOpen(false)} product={selectedModalProduct} />
-      <Snackbar
-        open={snackbarOpen}
-        autoHideDuration={6000}
-        onClose={() => setSnackbarOpen(false)}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-      >
-        <Alert onClose={() => setSnackbarOpen(false)} severity={snackbarSeverity} sx={{ width: "100%" }}>
-          {snackbarMessage}
-        </Alert>
-      </Snackbar>
     </>
   )
 }
