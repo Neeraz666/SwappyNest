@@ -17,6 +17,7 @@ const MainLayout = ({ children }) => {
           gridTemplateColumns: "280px 1fr 280px",
           height: "calc(100vh - 6rem)", // Full height minus Navbar
           backgroundColor: "#f5f5f5",
+          overflow: "hidden", // Prevent the entire layout from scrolling
         }}
       >
         {/* Sidebar (Categories) */}
@@ -25,7 +26,7 @@ const MainLayout = ({ children }) => {
             gridArea: "sidebar",
             borderRight: "1px solid #e0e0e0",
             backgroundColor: "#ffffff",
-            overflowY: "auto",
+            overflowY: "auto", // Allow scrolling inside the sidebar
             height: "100%",
           }}
         >
@@ -37,11 +38,11 @@ const MainLayout = ({ children }) => {
           sx={{
             gridArea: "main",
             padding: "24px 40px",
-            overflowY: "scroll",
+            overflowY: "auto", // Allow scrolling inside the main content
             height: "100%",
-            scrollbarWidth: "none",
+            scrollbarWidth: "none", // Hide scrollbar for Firefox
             "&::-webkit-scrollbar": {
-              display: "none",
+              display: "none", // Hide scrollbar for Chrome/Safari
             },
           }}
         >
@@ -57,6 +58,7 @@ const MainLayout = ({ children }) => {
             height: "100%",
             display: "flex",
             flexDirection: "column",
+            overflow: "hidden", 
           }}
         >
           <ChatList />
@@ -67,4 +69,3 @@ const MainLayout = ({ children }) => {
 }
 
 export default MainLayout
-

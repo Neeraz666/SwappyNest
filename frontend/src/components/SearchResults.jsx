@@ -1,5 +1,3 @@
-"use client"
-
 import { useEffect, useState } from "react"
 import { useLocation } from "react-router-dom"
 import { Box, Typography } from "@mui/material"

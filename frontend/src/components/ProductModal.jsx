@@ -11,7 +11,7 @@ import {
   CardActions,
   IconButton,
 } from '@mui/material';
-import { FavoriteBorder, Share } from '@mui/icons-material';
+import { FavoriteBorder, Share, Close  } from '@mui/icons-material';
 import Carousel from "react-multi-carousel";
 import "react-multi-carousel/lib/styles.css";
 import { defaultComments } from '../defaultComment'; 
@@ -134,6 +134,19 @@ export default function ProductModal({ open, onClose, product }) {
         }
       }}
     >
+      <IconButton
+        onClick={onClose}
+        sx={{
+          position: 'absolute',
+          top: 8,
+          right: 8,
+          zIndex: 10,
+          color: 'grey.600',
+          '&:hover': { color: 'black' }
+        }}
+      >
+        <Close />
+      </IconButton>
       <DialogContent sx={{ p: 0, height: '100%' }}>
         <Grid container sx={{ height: '100%' }}>
           <Grid
