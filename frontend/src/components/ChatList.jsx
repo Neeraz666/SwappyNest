@@ -75,7 +75,7 @@ const ChatList = () => {
       <Paper
         elevation={3}
         sx={{
-          height: selectedChat ? "60%" : "100%",
+          height: selectedChat ? "50%" : "100%",
           overflowY: "auto",
           borderRadius: "8px",
           p: 2,
@@ -113,7 +113,7 @@ const ChatList = () => {
       {selectedChat && (
         <Box
           sx={{
-            height: "40%",
+            height: "50%",
             mt: 2,
             transition: "height 0.3s ease-in-out",
             overflow: "hidden",
