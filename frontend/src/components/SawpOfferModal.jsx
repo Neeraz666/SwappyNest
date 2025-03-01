@@ -124,9 +124,15 @@ const SwapOfferModal = ({ isOpen, onClose, selectedProduct }) => {
           condition: selectedProduct.condition,
           purchaseYear: selectedProduct.purchaseyear,
           image: getFullImageUrl(selectedProduct.images[0]?.image),
+          owner: {
+            id: selectedProduct.user.id, // ✅ Include receiver's user ID
+            username: selectedProduct.user.username, // ✅ Include receiver's username
+            profilephoto: selectedProduct.user.profilephoto, // ✅ Include receiver's profile photo
+          },
         },
-      })
-      sendMessage(selectedProductMessage)
+      });
+      sendMessage(selectedProductMessage);
+      
 
       // Send the custom note if it's not empty
       if (note.trim()) {

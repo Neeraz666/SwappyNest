@@ -167,6 +167,23 @@ const ChatBox = ({ chat, onClose }) => {
   }
 
   const handleProductClick = (product, msg) => {
+    let productOwner = { id: null, username: null, profilephoto: null };
+
+    try {
+      const parsedMessage = JSON.parse(msg.text);
+      if (parsedMessage.type === "product" && parsedMessage.data.owner) {
+        productOwner = parsedMessage.data.owner;
+      }
+    } catch (error) {
+      console.warn("⚠️ No owner data in message. Falling back to sender:", error);
+    }
+
+    if (!productOwner.id) {
+      productOwner = msg.sender === userData.username
+        ? { id: userData.id, username: userData.username, profilephoto: userData.profilephoto }
+        : { id: chat.otherParticipant.id, username: chat.otherParticipant.username, profilephoto: chat.otherParticipant.profilephoto };
+    }
+
     const formattedProduct = {
       id: product.id,
       name: product.name,
@@ -175,16 +192,14 @@ const ChatBox = ({ chat, onClose }) => {
       images: [product.image],
       description: product.description || "No description provided",
       uploadDate: product.uploadDate || "Not Provided",
-      uploadedBy: msg.sender,
-      userId: msg.sender === userData.username ? userData.id : chat.otherParticipant.id,
-      userProfilePic:
-        msg.sender === userData.username
-          ? getFullImageUrl(userData.profilephoto)
-          : getFullImageUrl(chat.otherParticipant.profilephoto),
-    }
-    setSelectedModalProduct(formattedProduct)
-    setProductModalOpen(true)
-  }
+      uploadedBy: productOwner.username,
+      userProfilePic: getFullImageUrl(productOwner.profilephoto),
+      userId: productOwner.id,
+    };
+
+    setSelectedModalProduct(formattedProduct);
+    setProductModalOpen(true);
+  };
 
   const renderMessage = (msg) => {
     try {
