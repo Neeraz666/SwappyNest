@@ -2,8 +2,25 @@
 
 import { useState, useEffect } from "react"
 import { useParams } from "react-router-dom"
-import { Box, Typography, Avatar, Button, Grid, Card, CardContent, CardMedia } from "@mui/material"
-import { Edit, Email, Person, Phone, LocationOn } from "@mui/icons-material"
+import {
+  Box,
+  Typography,
+  Avatar,
+  Button,
+  Grid,
+  Card,
+  CardContent,
+  CardMedia,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Rating,
+  Snackbar,
+  Alert,
+} from "@mui/material"
+import { Edit, Email, Person, Phone, LocationOn, Star, Favorite, RateReview } from "@mui/icons-material"
 import axios from "axios"
 import ProductModal from "../components/ProductModal"
 import EditProfile from "./EditProfile"
@@ -19,8 +36,12 @@ export default function Profile() {
   const [user, setUser] = useState(null)
   const [products, setProducts] = useState([])
   const [openEditDialog, setOpenEditDialog] = useState(false)
+  const [openReviewModal, setOpenReviewModal] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState(null)
   const [modalOpen, setModalOpen] = useState(false)
+  const [rating, setRating] = useState(0)
+  const [reviewContent, setReviewContent] = useState("")
+  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" })
 
   const loadProfileData = async () => {
     try {
@@ -35,8 +56,10 @@ export default function Profile() {
   }
 
   useEffect(() => {
-    loadProfileData()
-  }, [userId]) //Fixed useEffect dependency
+    if (userId) {
+      loadProfileData()
+    }
+  }, [userId]) // Removed loadProfileData from dependencies
 
   const handleEditOpen = () => {
     setOpenEditDialog(true)
@@ -56,6 +79,56 @@ export default function Profile() {
     setSelectedProduct(null)
   }
 
+  const handleCreateReview = () => {
+    setOpenReviewModal(true)
+  }
+
+  const handleCloseReviewModal = () => {
+    setOpenReviewModal(false)
+    setRating(0)
+    setReviewContent("")
+  }
+
+  const handleSubmitReview = async () => {
+    if (rating === 0) {
+      setSnackbar({ open: true, message: "Please provide a rating", severity: "error" })
+      return
+    }
+
+    try {
+      const response = await axios.post(
+        `${BASE_URL}/api/user/createreview/`,
+        {
+          reviewed_user: user.email,
+          rating,
+          content: reviewContent,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+          },
+        },
+      )
+
+      if (response.data.success) {
+        setSnackbar({ open: true, message: "Review submitted successfully", severity: "success" })
+        handleCloseReviewModal()
+        loadProfileData() // Refresh profile data to show the new review
+      } else {
+        setSnackbar({ open: true, message: "Failed to submit review", severity: "error" })
+      }
+    } catch (error) {
+      setSnackbar({ open: true, message: error.response?.data?.error || "An error occurred", severity: "error" })
+    }
+  }
+
+  const handleCloseSnackbar = (event, reason) => {
+    if (reason === "clickaway") {
+      return
+    }
+    setSnackbar({ ...snackbar, open: false })
+  }
+
   if (!user) {
     return (
       <MainLayout>
@@ -65,10 +138,11 @@ export default function Profile() {
   }
 
   const isAuthenticatedAndOwnProfile = userData && userData.id === Number.parseInt(userId)
+  const isAuthenticatedAndNotOwnProfile = userData && userData.id !== Number.parseInt(userId)
 
   return (
     <MainLayout>
-      <Box>
+      <Box sx={{ py: 4 }}>
         <Card elevation={3} sx={{ mb: 4, overflow: "hidden" }}>
           <Box
             sx={{
@@ -114,21 +188,35 @@ export default function Profile() {
                   {user.address || "N/A"}
                 </Typography>
               </Grid>
-              <Grid
-                item
-                xs={12}
-                md={4}
-                sx={{
-                  display: "flex",
-                  justifyContent: "flex-end",
-                  alignItems: "flex-start",
-                }}
-              >
-                {isAuthenticatedAndOwnProfile && (
-                  <Button variant="contained" startIcon={<Edit />} onClick={handleEditOpen}>
-                    Edit Profile
+              <Grid item xs={12} md={4}>
+                <Box sx={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2 }}>
+                  {isAuthenticatedAndOwnProfile && (
+                    <Button
+                      variant="contained"
+                      startIcon={<Edit />}
+                      onClick={handleEditOpen}
+                      sx={{ width: "fit-content" }}
+                    >
+                      Edit Profile
+                    </Button>
+                  )}
+                  {isAuthenticatedAndNotOwnProfile && (
+                    <Button
+                      variant="contained"
+                      startIcon={<Star />}
+                      onClick={handleCreateReview}
+                      sx={{ width: "fit-content" }}
+                    >
+                      Create Review
+                    </Button>
+                  )}
+                  <Button variant="contained" startIcon={<Favorite />} sx={{ width: "fit-content" }}>
+                    Liked Posts
                   </Button>
-                )}
+                  <Button variant="contained" startIcon={<RateReview />} sx={{ width: "fit-content" }}>
+                    Reviews
+                  </Button>
+                </Box>
               </Grid>
             </Grid>
           </Box>
@@ -193,6 +281,39 @@ export default function Profile() {
         }}
       />
 
+      <Dialog open={openReviewModal} onClose={handleCloseReviewModal}>
+        <DialogTitle>Create Review</DialogTitle>
+        <DialogContent>
+          <Box sx={{ my: 2 }}>
+            <Typography component="legend">Rating</Typography>
+            <Rating
+              name="rating"
+              value={rating}
+              onChange={(event, newValue) => {
+                setRating(newValue)
+              }}
+            />
+          </Box>
+          <TextField
+            autoFocus
+            margin="dense"
+            id="review"
+            label="Review"
+            type="text"
+            fullWidth
+            multiline
+            rows={4}
+            variant="outlined"
+            value={reviewContent}
+            onChange={(e) => setReviewContent(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseReviewModal}>Cancel</Button>
+          <Button onClick={handleSubmitReview}>Submit Review</Button>
+        </DialogActions>
+      </Dialog>
+
       <ProductModal
         open={modalOpen}
         onClose={handleCloseModal}
@@ -214,6 +335,12 @@ export default function Profile() {
             : null
         }
       />
+
+      <Snackbar open={snackbar.open} autoHideDuration={6000} onClose={handleCloseSnackbar}>
+        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: "100%" }}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </MainLayout>
   )
 }
