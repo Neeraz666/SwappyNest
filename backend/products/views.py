@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework import permissions
-from .models import Product, Image, Interest
+from .models import Product, Image, Interest, LikedProduct
 from rest_framework.response import Response
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from .serializers import ProductSerializer, InterestSerializer
@@ -79,12 +79,25 @@ class UploadProduct(APIView):
             print("Error:", str(e))
             return Response({'error': str(e)}, status=400)
         
+
+
+
+
+
+
 class InterestDetailView(RetrieveAPIView):
     serializer_class = InterestSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_object(self):
         return Interest.objects.filter(user=self.request.user).first()  
+
+
+
+
+
+
+
 
 
 class ListAllProduct(ListAPIView):
@@ -126,6 +139,9 @@ class ListAllProduct(ListAPIView):
 
 
 
+
+
+
 # ListCategoricalProduct class is created to get the products of a single category 
 class ListCategoricalProduct(ListAPIView):
     # Since the product searching is allowed to all users so, the users are not required to Log In before searching for products
@@ -142,6 +158,8 @@ class ListCategoricalProduct(ListAPIView):
         
         # If category_slug doesn't exits, none will be returned
         return Product.objects.none()
+
+
 
 
 
@@ -195,3 +213,57 @@ class ProductSearchView(ListAPIView):
         return cosine_similarity(vec1, vec2)[0][0]
     
 
+
+
+
+
+
+
+class LikeProductView(APIView):
+    permission_classes = (permissions.IsAuthenticated, )
+    def post(self, request):
+        try:
+            currentuser = request.user
+            product_id = request.data['product_id']
+            try:
+                liked_list = LikedProduct.objects.get(user=currentuser)
+
+                existing_liked_list = liked_list.liked_products
+
+                print(existing_liked_list) 
+                
+                existing_liked_list.append(product_id)
+
+                print(existing_liked_list)
+
+                liked_list.liked_products = sorted(existing_liked_list)
+
+                liked_list.save()
+
+            except LikedProduct.DoesNotExist:
+                LikedProduct.objects.create(user=currentuser, liked_products=[product_id])
+                
+            return Response({'success': 'Product liked successfully.'})  
+        except Exception as e:
+            return Response({'error': str(e)}, status=400)
+
+
+class ListLikedProducts(ListAPIView):
+    permission_classes = (permissions.IsAuthenticated, )
+    serializer_class = ProductSerializer
+    def get_queryset(self):
+        currentuser = self.request.user 
+
+        try:
+            liked_product = LikedProduct.objects.get(user=currentuser)
+            print(liked_product.liked_products)
+
+            product_ids = liked_product.liked_products
+            products = Product.objects.filter(id__in=product_ids)
+
+            return products
+
+        except LikedProduct.DoesNotExist:
+            return Product.objects.none()
+        
+    

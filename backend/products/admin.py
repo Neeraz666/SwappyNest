@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Product, Image, Interest
+from .models import Product, Image, Interest, LikedProduct
 
 
 class ImageAdmin(admin.TabularInline):
@@ -21,5 +21,12 @@ class InterestAdmin(admin.ModelAdmin):
     search_fields = ('user',)
     list_per_page = 50
 
+class LikedProductsAdmin(admin.ModelAdmin):
+    list_display = ('user', 'liked_products')
+    list_display_links = ('user', 'liked_products')
+    search_fields = ('user',)
+    list_per_page = 50
+
 admin.site.register(Product, ProductAdmin)
 admin.site.register(Interest, InterestAdmin)
+admin.site.register(LikedProduct, LikedProductsAdmin)
