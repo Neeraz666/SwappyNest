@@ -1,5 +1,3 @@
-"use client"
-
 import { useState } from "react"
 import { Dialog, DialogContent, Typography, Box, Grid, IconButton, CardActions } from "@mui/material"
 import { FavoriteBorder, Share, Close } from "@mui/icons-material"

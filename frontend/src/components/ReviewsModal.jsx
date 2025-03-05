@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useEffect } from "react"
 import { Modal, Box, Typography, Rating, Divider, CircularProgress, IconButton } from "@mui/material"
 import { Close } from "@mui/icons-material"

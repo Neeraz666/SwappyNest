@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useEffect, useRef } from "react"
 import Box from "@mui/material/Box"
 import Modal from "@mui/material/Modal"
