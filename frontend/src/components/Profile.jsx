@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useEffect } from "react"
 import { useParams } from "react-router-dom"
 import {
@@ -27,6 +25,7 @@ import EditProfile from "./EditProfile"
 import { useAuth } from "../context/authContext"
 import genericProfileImage from "../assets/profile.png"
 import MainLayout from "../pages/MainLayout"
+import ReviewsModal from "./ReviewsModal"
 
 const BASE_URL = "http://127.0.0.1:8000"
 
@@ -41,7 +40,9 @@ export default function Profile() {
   const [modalOpen, setModalOpen] = useState(false)
   const [rating, setRating] = useState(0)
   const [reviewContent, setReviewContent] = useState("")
+  const [reviewContentError, setReviewContentError] = useState("") // New state for validation
   const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" })
+  const [reviewsModalOpen, setReviewsModalOpen] = useState(false)
 
   const loadProfileData = async () => {
     try {
@@ -87,11 +88,22 @@ export default function Profile() {
     setOpenReviewModal(false)
     setRating(0)
     setReviewContent("")
+    setReviewContentError("") // Reset error state when closing
   }
 
   const handleSubmitReview = async () => {
+    // Reset error state
+    setReviewContentError("")
+
+    // Validate rating
     if (rating === 0) {
       setSnackbar({ open: true, message: "Please provide a rating", severity: "error" })
+      return
+    }
+
+    // Validate review content length
+    if (!reviewContent || reviewContent.trim().length < 15) {
+      setReviewContentError("Review must be at least 15 characters long")
       return
     }
 
@@ -129,6 +141,14 @@ export default function Profile() {
     setSnackbar({ ...snackbar, open: false })
   }
 
+  const handleOpenReviewsModal = () => {
+    setReviewsModalOpen(true)
+  }
+
+  const handleCloseReviewsModal = () => {
+    setReviewsModalOpen(false)
+  }
+
   if (!user) {
     return (
       <MainLayout>
@@ -142,7 +162,7 @@ export default function Profile() {
 
   return (
     <MainLayout>
-      <Box sx={{ py: 4 }}>
+      <Box>
         <Card elevation={3} sx={{ mb: 4, overflow: "hidden" }}>
           <Box
             sx={{
@@ -213,7 +233,12 @@ export default function Profile() {
                   <Button variant="contained" startIcon={<Favorite />} sx={{ width: "fit-content" }}>
                     Liked Posts
                   </Button>
-                  <Button variant="contained" startIcon={<RateReview />} sx={{ width: "fit-content" }}>
+                  <Button
+                    variant="contained"
+                    startIcon={<RateReview />}
+                    onClick={handleOpenReviewsModal}
+                    sx={{ width: "fit-content" }}
+                  >
                     Reviews
                   </Button>
                 </Box>
@@ -305,12 +330,19 @@ export default function Profile() {
             rows={4}
             variant="outlined"
             value={reviewContent}
-            onChange={(e) => setReviewContent(e.target.value)}
+            onChange={(e) => {
+              setReviewContent(e.target.value)
+              if (e.target.value.trim().length >= 15) {
+                setReviewContentError("")
+              }
+            }}
+            error={!!reviewContentError}
+            helperText={reviewContentError}
           />
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseReviewModal}>Cancel</Button>
-          <Button onClick={handleSubmitReview}>Submit Review</Button>
+          <Button onClick={handleSubmitReview}>Submit</Button>
         </DialogActions>
       </Dialog>
 
@@ -341,6 +373,7 @@ export default function Profile() {
           {snackbar.message}
         </Alert>
       </Snackbar>
+      <ReviewsModal open={reviewsModalOpen} onClose={handleCloseReviewsModal} userId={userId} />
     </MainLayout>
   )
 }
