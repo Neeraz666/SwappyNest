@@ -240,11 +240,11 @@ export default function Feed({ initialProducts = [], searchQuery, categorySlug }
     <Container
       sx={{
         width: "100%",
-        maxWidth: "800px",
+        maxWidth: "850px",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        px: 0,
+        px: "0px !important",
         overflowY: "auto", // Enable scrolling
         msOverflowStyle: "none", // Hide scrollbar for IE and Edge
         scrollbarWidth: "none", // Hide scrollbar for Firefox
@@ -274,7 +274,6 @@ export default function Feed({ initialProducts = [], searchQuery, categorySlug }
               variant="outlined"
               sx={{
                 width: "100%",
-                maxWidth: "800px",
                 padding: 2,
                 boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
                 border: "1px solid #e0e0e0",

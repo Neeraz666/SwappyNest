@@ -37,7 +37,8 @@ const MainLayout = ({ children }) => {
         <Box
           sx={{
             gridArea: "main",
-            padding: "24px 40px",
+            padding: "0 20px",
+            paddingTop:"24px",
             overflowY: "auto", // Allow scrolling inside the main content
             height: "100%",
             scrollbarWidth: "none", // Hide scrollbar for Firefox
