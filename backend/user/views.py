@@ -162,7 +162,7 @@ class ListReviewForUserAPIView(ListAPIView):
 
 
 class ListReviewByUserAPIView(ListAPIView):
-    permission_classes = (permissions.AllowAny,)
+    permission_classes = (permissions.IsAuthenticated,)
     serializer_class = UserReviewSerializer
 
     def get_queryset(self):
