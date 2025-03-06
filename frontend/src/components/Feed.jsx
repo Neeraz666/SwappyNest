@@ -1,7 +1,8 @@
 import { useEffect, useState, useCallback, useRef } from "react"
 import { Box, Typography, IconButton, Card, CardContent, CardActions, CircularProgress, Container } from "@mui/material"
-import { FavoriteBorder, Share } from "@mui/icons-material"
+import { FavoriteBorder, Favorite, Share } from "@mui/icons-material"
 import { useAuth } from '../context/authContext';
+import { useLikedProducts } from "../context/likedProductsContext";
 import genericProfileImage from "../assets/profile.png"
 import ProductModal from "./ProductModal"
 import AvatarComponent from "./AvatarComponent"
@@ -22,6 +23,7 @@ export default function Feed({ initialProducts = [], searchQuery, categorySlug }
   const loader = useRef(null)
   const observer = useRef(null)
   const [swapOfferModalOpen, setSwapOfferModalOpen] = useState(false)
+  const { likedProducts, toggleLike } = useLikedProducts();
 
   const handleOpenSwapOffer = (product) => {
     setSelectedProduct(product)
@@ -368,8 +370,25 @@ export default function Feed({ initialProducts = [], searchQuery, categorySlug }
                   marginTop: 1,
                 }}
               >
-                <IconButton aria-label="like" sx={{ marginLeft: 0, padding: 0, "&:hover": { color: "primary.dark" } }}>
-                  <FavoriteBorder />
+                <IconButton
+                  aria-label="like"
+                  disabled={!isAuth || isProductOwner}
+                  onClick={() => toggleLike(product.id)}
+                  sx={{
+                    color: "inherit",
+                    "&:hover": {
+                      color: "primary.main",
+                    },
+                    "&.Mui-disabled": {
+                      color: "grey.500",
+                    },
+                  }}
+                >
+                  {likedProducts.some((likedProduct) => likedProduct.id === product.id) ? (
+                    <Favorite style={{ fill: "currentColor", stroke: "currentColor", strokeWidth: 2 }} />
+                  ) : (
+                    <FavoriteBorder />
+                  )}
                 </IconButton>
 
                 <IconButton
@@ -452,6 +471,7 @@ export default function Feed({ initialProducts = [], searchQuery, categorySlug }
                 : genericProfileImage,
               userId: selectedProduct.user.id,
               category: selectedProduct.category,
+              id: selectedProduct.id
             }
             : null
         }

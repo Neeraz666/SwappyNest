@@ -10,35 +10,38 @@ import UploadProduct from "./components/UploadProduct";
 import { AuthProvider } from "./context/authContext";
 import ProtectedRoute from './components/ProtectedRoute';
 import NotFound from "./components/404";
+import { LikedProductsProvider } from './context/likedProductsContext';
 
 function App() {
   return (
     <ThemeComponent>
       <Router>
         <AuthProvider>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/searchedresult" element={<SearchResultLayout />} />
-            <Route path="/profile/:userId" element={<Profile />} />
-            <Route
-              path="/profile/:userId/edit"
-              element={
-                <ProtectedRoute>
-                  <EditProfile />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="/login" element={<Login />} />
-            <Route
-              path="/upload"
-              element={
-                <ProtectedRoute>
-                  <UploadProduct />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <LikedProductsProvider>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/searchedresult" element={<SearchResultLayout />} />
+              <Route path="/profile/:userId" element={<Profile />} />
+              <Route
+                path="/profile/:userId/edit"
+                element={
+                  <ProtectedRoute>
+                    <EditProfile />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="/login" element={<Login />} />
+              <Route
+                path="/upload"
+                element={
+                  <ProtectedRoute>
+                    <UploadProduct />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </LikedProductsProvider>
         </AuthProvider>
       </Router>
     </ThemeComponent>
@@ -46,4 +49,3 @@ function App() {
 }
 
 export default App;
-

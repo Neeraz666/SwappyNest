@@ -221,36 +221,42 @@ class ProductSearchView(ListAPIView):
 
 class LikeProductView(APIView):
     permission_classes = (permissions.IsAuthenticated, )
+
     def post(self, request):
         try:
             currentuser = request.user
             product_id = request.data['product_id']
+
             try:
                 liked_list = LikedProduct.objects.get(user=currentuser)
+                existing_liked_set = set(liked_list.liked_products)
 
-                existing_liked_list = liked_list.liked_products
+                if product_id in existing_liked_set:
+                    existing_liked_set.remove(product_id)  # If the product is already liked, unlike it
+                    message = "Product unliked successfully."
+                else:
+                    existing_liked_set.add(product_id)  # If the product is not liked, like it
+                    message = "Product liked successfully."
 
-                print(existing_liked_list) 
                 
-                existing_liked_list.append(product_id)
-
-                print(existing_liked_list)
-
-                liked_list.liked_products = sorted(existing_liked_list)
-
+                liked_list.liked_products = sorted(list(existing_liked_set))  # Convert set to list and sort
                 liked_list.save()
 
             except LikedProduct.DoesNotExist:
+                # If the user does not have a liked products entry, create it
                 LikedProduct.objects.create(user=currentuser, liked_products=[product_id])
-                
-            return Response({'success': 'Product liked successfully.'})  
+                message = "Product liked successfully."
+
+            return Response({'success': message})
+
         except Exception as e:
             return Response({'error': str(e)}, status=400)
-
 
 class ListLikedProducts(ListAPIView):
     permission_classes = (permissions.IsAuthenticated, )
     serializer_class = ProductSerializer
+    pagination_class = None
+    
     def get_queryset(self):
         currentuser = self.request.user 
 

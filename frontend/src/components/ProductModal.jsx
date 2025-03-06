@@ -1,15 +1,18 @@
 import { useState } from "react"
 import { Dialog, DialogContent, Typography, Box, Grid, IconButton, CardActions } from "@mui/material"
-import { FavoriteBorder, Share, Close } from "@mui/icons-material"
+import { FavoriteBorder, Favorite, Share, Close } from "@mui/icons-material"
 import Carousel from "react-multi-carousel"
 import "react-multi-carousel/lib/styles.css"
 import AvatarComponent from "./AvatarComponent"
 import SwapOfferModal from "./SawpOfferModal"
 import { useAuth } from "../context/authContext"
+import { useLikedProducts } from "../context/likedProductsContext"
 
 export default function ProductModal({ open, onClose, product }) {
   const [swapOfferModalOpen, setSwapOfferModalOpen] = useState(false)
   const { isAuth, userData } = useAuth()
+  const { likedProducts, toggleLike } = useLikedProducts();
+  console.log(product)
 
   const responsive = {
     desktop: {
@@ -254,17 +257,29 @@ export default function ProductModal({ open, onClose, product }) {
                 >
                   <IconButton
                     aria-label="like"
+                    disabled={!isAuth || isProductOwner}
+                    onClick={() => {
+                      if (product && product.id) {
+                        toggleLike(product.id);
+                      } else {
+                        console.error("Product ID is missing or invalid.");
+                      }
+                    }}
                     sx={{
-                      marginLeft: 0,
-                      padding: 1.5,
-                      backgroundColor: "rgba(0,0,0,0.03)",
+                      color: "inherit",
                       "&:hover": {
-                        color: "primary.dark",
-                        backgroundColor: "rgba(0,0,0,0.06)",
+                        color: "primary.main",
+                      },
+                      "&.Mui-disabled": {
+                        color: "grey.500",
                       },
                     }}
                   >
-                    <FavoriteBorder />
+                    {likedProducts.some((likedProduct) => likedProduct.id === product.id) ? (
+                      <Favorite style={{ fill: "currentColor", stroke: "currentColor", strokeWidth: 2 }} />
+                    ) : (
+                      <FavoriteBorder />
+                    )}
                   </IconButton>
 
                   <IconButton
