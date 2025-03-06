@@ -26,6 +26,7 @@ import { useAuth } from "../context/authContext"
 import genericProfileImage from "../assets/profile.png"
 import MainLayout from "../pages/MainLayout"
 import ReviewsModal from "./ReviewsModal"
+import LikedPostsModal from "./LikedModalProducts"
 
 const BASE_URL = "http://127.0.0.1:8000"
 
@@ -43,6 +44,7 @@ export default function Profile() {
   const [reviewContentError, setReviewContentError] = useState("") // New state for validation
   const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" })
   const [reviewsModalOpen, setReviewsModalOpen] = useState(false)
+  const [likedPostsModalOpen, setLikedPostsModalOpen] = useState(false)
 
   const loadProfileData = async () => {
     try {
@@ -149,6 +151,14 @@ export default function Profile() {
     setReviewsModalOpen(false)
   }
 
+  const handleOpenLikedPostsModal = () => {
+    setLikedPostsModalOpen(true)
+  }
+
+  const handleCloseLikedPostsModal = () => {
+    setLikedPostsModalOpen(false)
+  }
+
   if (!user) {
     return (
       <MainLayout>
@@ -213,6 +223,16 @@ export default function Profile() {
                   {isAuthenticatedAndOwnProfile && (
                     <Button
                       variant="contained"
+                      startIcon={<Favorite />}
+                      onClick={handleOpenLikedPostsModal}
+                      sx={{ width: "fit-content" }}
+                    >
+                      Liked Products
+                    </Button>
+                  )}
+                  {isAuthenticatedAndOwnProfile && (
+                    <Button
+                      variant="contained"
                       startIcon={<Edit />}
                       onClick={handleEditOpen}
                       sx={{ width: "fit-content" }}
@@ -230,9 +250,6 @@ export default function Profile() {
                       Create Review
                     </Button>
                   )}
-                  <Button variant="contained" startIcon={<Favorite />} sx={{ width: "fit-content" }}>
-                    Liked Posts
-                  </Button>
                   <Button
                     variant="contained"
                     startIcon={<RateReview />}
@@ -352,18 +369,19 @@ export default function Profile() {
         product={
           selectedProduct
             ? {
-                name: selectedProduct.productname,
-                uploadDate: selectedProduct.created_at,
-                condition: selectedProduct.condition,
-                purchaseYear: selectedProduct.purchaseyear,
-                description: selectedProduct.description,
-                images: selectedProduct.images.map((img) => `${BASE_URL}${img.image}`),
-                uploadedBy: user.username,
-                userId: user.id,
-                userProfilePic: user.profilephoto
-                  ? `${BASE_URL}${user.profilephoto}`
-                  : "/placeholder.svg?height=40&width=40",
-              }
+              name: selectedProduct.productname,
+              uploadDate: selectedProduct.created_at,
+              condition: selectedProduct.condition,
+              purchaseYear: selectedProduct.purchaseyear,
+              description: selectedProduct.description,
+              images: selectedProduct.images.map((img) => `${BASE_URL}${img.image}`),
+              uploadedBy: user.username,
+              userId: user.id,
+              userProfilePic: user.profilephoto
+                ? `${BASE_URL}${user.profilephoto}`
+                : "/placeholder.svg?height=40&width=40",
+              id: selectedProduct.id,
+            }
             : null
         }
       />
@@ -374,6 +392,7 @@ export default function Profile() {
         </Alert>
       </Snackbar>
       <ReviewsModal open={reviewsModalOpen} onClose={handleCloseReviewsModal} userId={userId} />
+      <LikedPostsModal open={likedPostsModalOpen} onClose={handleCloseLikedPostsModal} />
     </MainLayout>
   )
 }
