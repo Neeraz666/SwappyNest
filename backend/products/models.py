@@ -64,3 +64,10 @@ class Interest(models.Model):
     
     def __str__(self):
         return f"{self.user}'s interested products"
+
+class LikedProduct(models.Model):
+    user = models.ForeignKey(UserAccount, on_delete=models.CASCADE)
+    liked_products = models.JSONField(default=list, blank=True)
+    
+    def __str__(self):
+        return f"{self.user}'s liked products"
