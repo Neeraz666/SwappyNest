@@ -94,6 +94,12 @@ export default function LikedPostsModal({ open, onClose }) {
             <Box display="flex" justifyContent="center" alignItems="center" height="100%">
               <CircularProgress />
             </Box>
+          ) : likedProducts.length === 0 ? (
+            <Box display="flex" justifyContent="center" alignItems="center" height="100%">
+              <Typography variant="h6" color="text.secondary">
+                You have not liked any products yet.
+              </Typography>
+            </Box>
           ) : (
             <Grid container spacing={3}>
               {likedProducts.map((product) => (
@@ -146,18 +152,18 @@ export default function LikedPostsModal({ open, onClose }) {
         product={
           selectedProduct
             ? {
-                id: selectedProduct.id,
-                name: selectedProduct.productname,
-                uploadDate: selectedProduct.created_at,
-                condition: selectedProduct.condition,
-                purchaseYear: selectedProduct.purchaseyear,
-                description: selectedProduct.description,
-                images: selectedProduct.images.map((img) => img.image),
-                uploadedBy: selectedProduct.user.username,
-                userId: selectedProduct.user.id,
-                userProfilePic: selectedProduct.user.profilephoto,
-                category: selectedProduct.category,
-              }
+              id: selectedProduct.id,
+              name: selectedProduct.productname,
+              uploadDate: selectedProduct.created_at,
+              condition: selectedProduct.condition,
+              purchaseYear: selectedProduct.purchaseyear,
+              description: selectedProduct.description,
+              images: selectedProduct.images.map((img) => img.image),
+              uploadedBy: selectedProduct.user.username,
+              userId: selectedProduct.user.id,
+              userProfilePic: selectedProduct.user.profilephoto,
+              category: selectedProduct.category,
+            }
             : null
         }
       />
