@@ -323,16 +323,16 @@ export default function Profile() {
         }}
       />
 
-      <Dialog open={openReviewModal} onClose={handleCloseReviewModal}>
+      <Dialog open={openReviewModal} onClose={handleCloseReviewModal} maxWidth={false}>
         <DialogTitle>Create Review</DialogTitle>
-        <DialogContent>
+        <DialogContent sx={{ width: "500px" }}>
           <Box sx={{ my: 2 }}>
             <Typography component="legend">Rating</Typography>
             <Rating
               name="rating"
               value={rating}
               onChange={(event, newValue) => {
-                setRating(newValue)
+                setRating(newValue);
               }}
             />
           </Box>
@@ -348,9 +348,9 @@ export default function Profile() {
             variant="outlined"
             value={reviewContent}
             onChange={(e) => {
-              setReviewContent(e.target.value)
+              setReviewContent(e.target.value);
               if (e.target.value.trim().length >= 15) {
-                setReviewContentError("")
+                setReviewContentError("");
               }
             }}
             error={!!reviewContentError}
