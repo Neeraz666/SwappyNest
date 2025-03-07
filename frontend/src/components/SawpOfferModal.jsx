@@ -105,7 +105,7 @@ const SwapOfferModal = ({ isOpen, onClose, selectedProduct }) => {
             condition: product.condition,
             purchaseYear: product.purchaseyear,
             description: product.description,
-            uploadDate: product.uploadDate,
+            uploadDate: product.created_at,
             image: getFullImageUrl(product.images[0]?.image),
           },
         })
@@ -124,7 +124,7 @@ const SwapOfferModal = ({ isOpen, onClose, selectedProduct }) => {
           condition: selectedProduct.condition,
           purchaseYear: selectedProduct.purchaseyear,
           description: selectedProduct.description,
-          uploadDate: selectedProduct.uploadDate,
+          uploadDate: selectedProduct.created_at,
           image: getFullImageUrl(selectedProduct.images[0]?.image),
           owner: {
             id: selectedProduct.user.id, // ✅ Include receiver's user ID
