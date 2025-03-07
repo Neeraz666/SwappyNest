@@ -165,6 +165,7 @@ const ChatBox = ({ chat, onClose }) => {
   }
 
   const handleProductClick = (product, msg) => {
+    console.log("Product clicked:", product);
     let productOwner = { id: null, username: null, profilephoto: null };
 
     try {
@@ -181,6 +182,7 @@ const ChatBox = ({ chat, onClose }) => {
         ? { id: userData.id, username: userData.username, profilephoto: userData.profilephoto }
         : { id: chat.otherParticipant.id, username: chat.otherParticipant.username, profilephoto: chat.otherParticipant.profilephoto };
     }
+    console.log("product", productOwner)
 
     const formattedProduct = {
       id: product.id,
@@ -196,6 +198,7 @@ const ChatBox = ({ chat, onClose }) => {
     };
 
     setSelectedModalProduct(formattedProduct);
+    console.log("Selected product:", formattedProduct);
     setProductModalOpen(true);
   };
 

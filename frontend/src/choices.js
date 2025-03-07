@@ -25,7 +25,7 @@ export const CONDITION_CHOICES = [
     { name: 'Groceries', icon: LocalGroceryStore, value: 'groceries', label: 'Groceries' },
     { name: 'Health', icon: Favorite, value: 'health', label: 'Health' },
     { name: 'Home Appliances', icon: HomeWork, value: 'home_appliances', label: 'Home Appliances' },
-    { name: 'Jewellry', icon: Diamond, value: 'jewellry', label: 'Jewellry' },
+    { name: 'Jewellery', icon: Diamond, value: 'jewellery', label: 'Jewellery' },
     { name: 'Kitchenware', icon: Kitchen, value: 'kitchenware', label: 'Kitchenware' },
     { name: 'Movies', icon: Movie, value: 'movies', label: 'Movies' },
     { name: 'Music', icon: MusicNote, value: 'music', label: 'Music' },
