@@ -65,7 +65,8 @@ export default function Profile() {
   const [expandedReviews, setExpandedReviews] = useState({})
 
   const [reviewerInfo, setReviewerInfo] = useState({})
-
+  
+  const isAuthenticatedAndNotOwnProfile = userData && userData.id !== Number.parseInt(userId)
   const toggleReviewExpansion = (reviewId) => {
     setExpandedReviews((prev) => ({
       ...prev,
@@ -242,7 +243,7 @@ export default function Profile() {
   }
 
   const isAuthenticatedAndOwnProfile = userData && userData.id === Number.parseInt(userId)
-  const isAuthenticatedAndNotOwnProfile = userData && userData.id !== Number.parseInt(userId)
+  
 
   return (
     <MainLayout>
