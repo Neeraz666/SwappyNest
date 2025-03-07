@@ -164,6 +164,7 @@ class ListReviewForUserAPIView(ListAPIView):
 class ListReviewByUserAPIView(ListAPIView):
     permission_classes = (permissions.IsAuthenticated,)
     serializer_class = UserReviewSerializer
+    pagination_class = None
 
     def get_queryset(self):
         user_id = self.kwargs.get('user_id')

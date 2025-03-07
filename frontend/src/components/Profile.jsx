@@ -1,3 +1,5 @@
+"use client"
+
 import { useState, useEffect } from "react"
 import { useParams } from "react-router-dom"
 import {
@@ -18,7 +20,18 @@ import {
   Snackbar,
   Alert,
 } from "@mui/material"
-import { Edit, Email, Person, Phone, LocationOn, Star, Favorite, RateReview } from "@mui/icons-material"
+import {
+  Edit,
+  Email,
+  Person,
+  Phone,
+  LocationOn,
+  Star,
+  Favorite,
+  RateReview,
+  ExpandMore,
+  ExpandLess,
+} from "@mui/icons-material"
 import axios from "axios"
 import ProductModal from "../components/ProductModal"
 import EditProfile from "./EditProfile"
@@ -27,6 +40,7 @@ import genericProfileImage from "../assets/profile.png"
 import MainLayout from "../pages/MainLayout"
 import ReviewsModal from "./ReviewsModal"
 import LikedPostsModal from "./LikedModalProducts"
+import AvatarComponent from "./AvatarComponent"
 
 const BASE_URL = "http://127.0.0.1:8000"
 
@@ -45,6 +59,18 @@ export default function Profile() {
   const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" })
   const [reviewsModalOpen, setReviewsModalOpen] = useState(false)
   const [likedPostsModalOpen, setLikedPostsModalOpen] = useState(false)
+  const [userReviews, setUserReviews] = useState([])
+
+  const [expandedReviews, setExpandedReviews] = useState({})
+
+  const [reviewerInfo, setReviewerInfo] = useState({})
+
+  const toggleReviewExpansion = (reviewId) => {
+    setExpandedReviews((prev) => ({
+      ...prev,
+      [reviewId]: !prev[reviewId],
+    }))
+  }
 
   const loadProfileData = async () => {
     try {
@@ -53,6 +79,27 @@ export default function Profile() {
 
       const productsResponse = await axios.get(`${BASE_URL}/api/user/${userId}/products`)
       setProducts(productsResponse.data)
+
+      // Check if the profile belongs to the authenticated user
+      const isAuthenticatedAndOwnProfile = userData && userData.id === Number.parseInt(userId)
+
+      if (isAuthenticatedAndOwnProfile) {
+        const reviewsResponse = await axios.get(`${BASE_URL}/api/user/byuserreviewlist/${userId}/`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+          },
+        })
+        setUserReviews(reviewsResponse.data)
+
+        // Fetch reviewer information for each review
+        const reviewerInfoPromises = reviewsResponse.data.map((review) => fetchUserData(review.reviewed_user))
+        const reviewerInfoResults = await Promise.all(reviewerInfoPromises)
+        const reviewerInfoMap = {}
+        reviewerInfoResults.forEach((reviewer, index) => {
+          reviewerInfoMap[reviewsResponse.data[index].reviewed_user] = reviewer
+        })
+        setReviewerInfo(reviewerInfoMap)
+      }
     } catch (error) {
       console.error("Error fetching profile data:", error)
     }
@@ -62,7 +109,7 @@ export default function Profile() {
     if (userId) {
       loadProfileData()
     }
-  }, [userId]) // Removed loadProfileData from dependencies
+  }, [userId, userData]) // Added userData to dependencies
 
   const handleEditOpen = () => {
     setOpenEditDialog(true)
@@ -267,51 +314,179 @@ export default function Profile() {
         <Typography variant="h5" gutterBottom sx={{ mb: 3 }}>
           My Products
         </Typography>
-        <Grid container spacing={3}>
-          {products.map((product) => (
-            <Grid item xs={12} sm={6} md={4} key={product.id}>
-              <Card
-                onClick={() => handleProductClick(product)}
+        <Card
+          elevation={3}
+          sx={{
+            mb: 4,
+            overflow: "hidden",
+            borderRadius: "8px",
+            border: "1px solid",
+            borderColor: "divider",
+            backgroundColor: "background.paper",
+          }}
+        >
+          <Box sx={{ p: 3, maxHeight: "80vh", overflow: "auto" }}>
+            {products.length > 0 ? (
+              <Grid container spacing={3}>
+                {products.map((product) => (
+                  <Grid item xs={12} sm={6} md={4} key={product.id}>
+                    <Card
+                      onClick={() => handleProductClick(product)}
+                      sx={{
+                        cursor: "pointer",
+                        height: "100%",
+                        display: "flex",
+                        flexDirection: "column",
+                        border: "1px solid",
+                        borderColor: "divider",
+                        transition: "all 0.3s ease-in-out",
+                        "&:hover": {
+                          boxShadow: 6,
+                          transform: "translateY(-4px)",
+                        },
+                      }}
+                    >
+                      <CardMedia
+                        component="img"
+                        height="200"
+                        image={
+                          product.images[0]
+                            ? `${BASE_URL}${product.images[0].image}`
+                            : "/placeholder.svg?height=200&width=250"
+                        }
+                        alt={product.productname}
+                      />
+                      <CardContent
+                        sx={{
+                          flexGrow: 1,
+                          display: "flex",
+                          flexDirection: "column",
+                          justifyContent: "space-between",
+                          p: 2,
+                        }}
+                      >
+                        <Typography gutterBottom variant="h6" component="div" sx={{ mb: 0 }}>
+                          {product.productname}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {product.condition} • {product.purchaseyear}
+                        </Typography>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                ))}
+              </Grid>
+            ) : (
+              <Box
                 sx={{
-                  cursor: "pointer",
-                  height: "100%",
                   display: "flex",
                   flexDirection: "column",
-                  "&:hover": {
-                    boxShadow: 6,
-                  },
+                  alignItems: "center",
+                  justifyContent: "center",
+                  py: 8,
                 }}
               >
-                <CardMedia
-                  component="img"
-                  height="200"
-                  image={
-                    product.images[0]
-                      ? `${BASE_URL}${product.images[0].image}`
-                      : "/placeholder.svg?height=200&width=250"
-                  }
-                  alt={product.productname}
-                />
-                <CardContent
-                  sx={{
-                    flexGrow: 1,
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "space-between",
-                    p: 2,
-                  }}
-                >
-                  <Typography gutterBottom variant="h6" component="div" sx={{ mb: 0 }}>
-                    {product.productname}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {product.condition} • {product.purchaseyear}
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
+                <Typography variant="h6" color="text.secondary" gutterBottom>
+                  No products uploaded yet
+                </Typography>
+                <Typography variant="body2" color="text.secondary" align="center">
+                  {isAuthenticatedAndOwnProfile
+                    ? "You haven't uploaded any products. Start sharing your items with the community!"
+                    : "This user hasn't uploaded any products yet."}
+                </Typography>
+              </Box>
+            )}
+          </Box>
+        </Card>
+        {isAuthenticatedAndOwnProfile && (
+          <>
+            <Typography variant="h5" gutterBottom sx={{ mb: 3, mt: 4 }}>
+              My Reviews
+            </Typography>
+            <Card elevation={3} sx={{ mb: 4, overflow: "hidden", borderRadius: "8px" }}>
+              <Box sx={{ p: 3, maxHeight: "80vh", overflow: "auto" }}>
+                {userReviews.length > 0 ? (
+                  <Grid container spacing={3}>
+                    {userReviews.map((review) => (
+                      <Grid item xs={12} sm={6} md={4} key={review.id}>
+                        <Card
+                          sx={{
+                            height: "100%",
+                            display: "flex",
+                            flexDirection: "column",
+                            border: "1px solid",
+                            borderColor: "divider",
+                            transition: "all 0.3s ease-in-out",
+                            "&:hover": {
+                              boxShadow: 3,
+                              transform: "translateY(-4px)",
+                            },
+                          }}
+                        >
+                          <CardContent sx={{ flexGrow: 1 }}>
+                            <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+                              <AvatarComponent
+                                src={
+                                  reviewerInfo[review.reviewed_user]?.profilephoto
+                                    ? `${BASE_URL}${reviewerInfo[review.reviewed_user].profilephoto}`
+                                    : genericProfileImage
+                                }
+                                userId={review.reviewed_user}
+                                size={40}
+                              />
+                              <Typography variant="subtitle1" sx={{ ml: 2 }}>
+                                {reviewerInfo[review.reviewed_user]?.username || "Unknown User"}
+                              </Typography>
+                            </Box>
+                            <Typography gutterBottom variant="h6" component="div">
+                              Rating: {review.rating}/5
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              {expandedReviews[review.id]
+                                ? review.content
+                                : `${review.content.substring(0, 100)}${review.content.length > 100 ? "..." : ""}`}
+                            </Typography>
+                            {review.content.length > 100 && (
+                              <Button
+                                onClick={() => toggleReviewExpansion(review.id)}
+                                endIcon={expandedReviews[review.id] ? <ExpandLess /> : <ExpandMore />}
+                                sx={{ mt: 1, p: 0 }}
+                              >
+                                {expandedReviews[review.id] ? "Show Less" : "Show More"}
+                              </Button>
+                            )}
+                          </CardContent>
+                          <CardContent>
+                            <Typography variant="caption" color="text.secondary">
+                              Created: {new Date(review.created_at).toLocaleDateString()}
+                            </Typography>
+                          </CardContent>
+                        </Card>
+                      </Grid>
+                    ))}
+                  </Grid>
+                ) : (
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      py: 8,
+                    }}
+                  >
+                    <Typography variant="h6" color="text.secondary" gutterBottom>
+                      No reviews written yet
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" align="center">
+                      You haven't written any reviews yet. Start sharing your experiences with the community!
+                    </Typography>
+                  </Box>
+                )}
+              </Box>
+            </Card>
+          </>
+        )}
       </Box>
 
       <EditProfile
@@ -332,7 +507,7 @@ export default function Profile() {
               name="rating"
               value={rating}
               onChange={(event, newValue) => {
-                setRating(newValue);
+                setRating(newValue)
               }}
             />
           </Box>
@@ -348,9 +523,9 @@ export default function Profile() {
             variant="outlined"
             value={reviewContent}
             onChange={(e) => {
-              setReviewContent(e.target.value);
+              setReviewContent(e.target.value)
               if (e.target.value.trim().length >= 15) {
-                setReviewContentError("");
+                setReviewContentError("")
               }
             }}
             error={!!reviewContentError}
@@ -369,19 +544,19 @@ export default function Profile() {
         product={
           selectedProduct
             ? {
-              name: selectedProduct.productname,
-              uploadDate: selectedProduct.created_at,
-              condition: selectedProduct.condition,
-              purchaseYear: selectedProduct.purchaseyear,
-              description: selectedProduct.description,
-              images: selectedProduct.images.map((img) => `${BASE_URL}${img.image}`),
-              uploadedBy: user.username,
-              userId: user.id,
-              userProfilePic: user.profilephoto
-                ? `${BASE_URL}${user.profilephoto}`
-                : "/placeholder.svg?height=40&width=40",
-              id: selectedProduct.id,
-            }
+                name: selectedProduct.productname,
+                uploadDate: selectedProduct.created_at,
+                condition: selectedProduct.condition,
+                purchaseYear: selectedProduct.purchaseyear,
+                description: selectedProduct.description,
+                images: selectedProduct.images.map((img) => `${BASE_URL}${img.image}`),
+                uploadedBy: user.username,
+                userId: user.id,
+                userProfilePic: user.profilephoto
+                  ? `${BASE_URL}${user.profilephoto}`
+                  : "/placeholder.svg?height=40&width=40",
+                id: selectedProduct.id,
+              }
             : null
         }
       />
