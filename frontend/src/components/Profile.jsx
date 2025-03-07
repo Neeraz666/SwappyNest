@@ -60,6 +60,7 @@ export default function Profile() {
   const [reviewsModalOpen, setReviewsModalOpen] = useState(false)
   const [likedPostsModalOpen, setLikedPostsModalOpen] = useState(false)
   const [userReviews, setUserReviews] = useState([])
+  const [existingReview, setExistingReview] = useState(null) // Added state for existing review
 
   const [expandedReviews, setExpandedReviews] = useState({})
 
@@ -100,6 +101,25 @@ export default function Profile() {
         })
         setReviewerInfo(reviewerInfoMap)
       }
+
+      // Check if the authenticated user has already reviewed this profile user
+      if (isAuthenticatedAndNotOwnProfile) {
+        try {
+          const userReviewsResponse = await axios.get(`${BASE_URL}/api/user/byuserreviewlist/${userData.id}/`, {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+            },
+          })
+
+          // Find if there's an existing review for this profile user
+          const review = userReviewsResponse.data.find((r) => r.reviewed_user === Number(userId))
+          if (review) {
+            setExistingReview(review)
+          }
+        } catch (error) {
+          console.error("Error fetching user reviews:", error)
+        }
+      }
     } catch (error) {
       console.error("Error fetching profile data:", error)
     }
@@ -130,6 +150,13 @@ export default function Profile() {
   }
 
   const handleCreateReview = () => {
+    if (existingReview) {
+      setRating(existingReview.rating)
+      setReviewContent(existingReview.content)
+    } else {
+      setRating(0)
+      setReviewContent("")
+    }
     setOpenReviewModal(true)
   }
 
@@ -290,11 +317,11 @@ export default function Profile() {
                   {isAuthenticatedAndNotOwnProfile && (
                     <Button
                       variant="contained"
-                      startIcon={<Star />}
+                      startIcon={existingReview ? <Edit /> : <Star />}
                       onClick={handleCreateReview}
                       sx={{ width: "fit-content" }}
                     >
-                      Create Review
+                      {existingReview ? "Edit Review" : "Create Review"}
                     </Button>
                   )}
                   <Button
@@ -499,7 +526,7 @@ export default function Profile() {
       />
 
       <Dialog open={openReviewModal} onClose={handleCloseReviewModal} maxWidth={false}>
-        <DialogTitle>Create Review</DialogTitle>
+        <DialogTitle>{existingReview ? "Edit Review" : "Create Review"}</DialogTitle>
         <DialogContent sx={{ width: "500px" }}>
           <Box sx={{ my: 2 }}>
             <Typography component="legend">Rating</Typography>
@@ -534,7 +561,7 @@ export default function Profile() {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseReviewModal}>Cancel</Button>
-          <Button onClick={handleSubmitReview}>Submit</Button>
+          <Button onClick={handleSubmitReview}>{existingReview ? "Update" : "Submit"}</Button>
         </DialogActions>
       </Dialog>
 

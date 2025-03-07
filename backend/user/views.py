@@ -11,13 +11,16 @@ from django.core.exceptions import ValidationError, PermissionDenied
 from .models import UserReview
 from .serializers import UserSerializer, UserReviewSerializer
 from products.models import Product
-from  products.serializers import ProductSerializer
+from products.serializers import ProductSerializer
 
 User = get_user_model()
 
 # Create your views here.
+
+
 class SignUpView(APIView):
     permission_classes = (permissions.AllowAny, )
+
     def post(self, request, format=None):
         data = self.request.data
 
@@ -37,21 +40,20 @@ class SignUpView(APIView):
 
             except ValidationError as e:
                 return Response({'Error': e.messages})
-            
+
             if User.objects.filter(email=email).exists():
                 return Response({'error': 'Email already exists! Try another one.'})
-            
+
             else:
-                user = User.objects.create_user(email=email, username=username, firstname=firstname, lastname=lastname, password=password, profilephoto=profilephoto, phone=phone, address=address)
+                user = User.objects.create_user(email=email, username=username, firstname=firstname, lastname=lastname,
+                                                password=password, profilephoto=profilephoto, phone=phone, address=address)
 
                 user.save()
 
                 return Response({'Success': 'User created successfully.'})
-            
+
         else:
             return Response({'error': 'Passwords donot match! Try again.'})
-
-
 
 
 class UserDetail(APIView):
@@ -59,12 +61,15 @@ class UserDetail(APIView):
     Allow any user to view a profile.
     Only the profile owner can edit their profile.
     """
-    permission_classes = [permissions.AllowAny]  # Anyone can access the view for GET
-    parser_classes = (MultiPartParser, FormParser)  # Added to handle file uploads
+    permission_classes = [
+        permissions.AllowAny]  # Anyone can access the view for GET
+    # Added to handle file uploads
+    parser_classes = (MultiPartParser, FormParser)
 
     def get_object(self):
         user_id = self.kwargs.get('id')  # Get the user ID from the URL
-        return get_object_or_404(User, id=user_id)  # Return 404 if user doesn't exist
+        # Return 404 if user doesn't exist
+        return get_object_or_404(User, id=user_id)
 
     def get(self, request, *args, **kwargs):
         """
@@ -79,9 +84,11 @@ class UserDetail(APIView):
         user = self.get_object()
 
         if not request.user.is_authenticated or request.user != user:
-            raise PermissionDenied("You are not allowed to update this profile.")
+            raise PermissionDenied(
+                "You are not allowed to update this profile.")
 
-        remove_profilephoto = request.data.get('remove_profilephoto', 'false') == 'true'
+        remove_profilephoto = request.data.get(
+            'remove_profilephoto', 'false') == 'true'
         profilephoto = request.data.get('profilephoto', None)
 
         if remove_profilephoto and not profilephoto:  # Remove only if no new photo is provided
@@ -100,25 +107,25 @@ class UserDetail(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
+
 class UserProductsView(APIView):
     """
     Retrieve all products associated with a user, identified by their username.
     """
-    permission_classes = [] 
+    permission_classes = []
 
     def get(self, request, id):
         # Retrieve the user object based on the id
         user = get_object_or_404(User, id=id)
-        
+
         # Query products belonging to this user
         products = Product.objects.filter(user=user)
-        
+
         # Serialize the products
         serializer = ProductSerializer(products, many=True)
-        
+
         return Response(serializer.data, status=status.HTTP_200_OK)
-    
 
 
 class ReviewCreateAPIView(APIView):
@@ -132,32 +139,37 @@ class ReviewCreateAPIView(APIView):
         rating = data.get('rating')
         content = data.get('content')
 
-        reviewed_user = get_object_or_404(User, email = reviewed_user_email)
+        reviewed_user = get_object_or_404(User, email=reviewed_user_email)
 
         try:
-            review = UserReview.objects.create(
-                reviewed_user = reviewed_user,
-                reviewer = current_user,
-                rating = rating,
-                content = content
+            review, created = UserReview.objects.update_or_create(
+                reviewed_user=reviewed_user,
+                reviewer=current_user,
+                defaults={
+                    'rating': rating,
+                    'content': content
+                }
             )
 
-            review.save()
+            if created:
+                message = 'Your review has been uploaded successfully!'
+            else:
+                message = 'Your review has been updated successfully!'
 
-            return Response({'success': 'Your review has been uploaded sucessfully!'})
+            return Response({'success': message, 'created': created})
         except Exception as e:
-            return Response({'error':str(e)}, status = status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 class ListReviewForUserAPIView(ListAPIView):
     permission_classes = (permissions.AllowAny,)
     serializer_class = UserReviewSerializer
-    
+
     def get_queryset(self):
         user_id = self.kwargs.get('user_id')
 
         if user_id:
-            return UserReview.objects.filter(reviewed_user = user_id)
+            return UserReview.objects.filter(reviewed_user=user_id)
         return Response({'error': 'Please provide user detail!'})
 
 
@@ -170,5 +182,5 @@ class ListReviewByUserAPIView(ListAPIView):
         user_id = self.kwargs.get('user_id')
 
         if user_id:
-            return UserReview.objects.filter(reviewer = user_id)
+            return UserReview.objects.filter(reviewer=user_id)
         return Response({'error': 'Please provide user details!'})
