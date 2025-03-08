@@ -99,14 +99,12 @@ export default function EditProfile({ open, onClose, onProfileUpdated }) {
     }
 
     try {
-      const accessToken = localStorage.getItem("access_token")
       const response = await axios.put(`${BASE_URL}/api/user/profile/${userId}/`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${accessToken}`,
         },
       })
-
+      
       updateUserData(response.data)
       await fetchUserData()
       setSnackbar({

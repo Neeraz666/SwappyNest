@@ -47,11 +47,7 @@ const UploadProduct = () => {
   useEffect(() => {
     const fetchInterestedProducts = async () => {
       try {
-        const response = await axios.get("http://localhost:8000/api/products/interest/", {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-          },
-        })
+        const response = await axios.get("http://localhost:8000/api/products/interest/")
 
         const interestedProducts = response.data.interested_products
 
@@ -152,7 +148,6 @@ const UploadProduct = () => {
       const response = await axios.post("http://localhost:8000/api/products/uploadproduct/", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
         },
       })
       console.log(response.data)
