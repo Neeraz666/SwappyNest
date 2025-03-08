@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { AppBar, Toolbar, IconButton, InputBase, Box, Button, Avatar, Typography } from "@mui/material"
-import { Search as SearchIcon, Notifications, Add } from "@mui/icons-material"
+import { Search as SearchIcon, Add } from "@mui/icons-material"
 import { useAuth } from "../context/authContext"
 import { useNavigate } from "react-router-dom"
 import Logo from "../assets/nest-blue.svg"
@@ -139,9 +139,7 @@ const Navbar = () => {
           <IconButton onClick={handleUploadProduct}>
             <Add />
           </IconButton>
-          <IconButton>
-            <Notifications />
-          </IconButton>
+
           {isAuth && (
             <IconButton onClick={handleProfileClick}>
               <Avatar src={avatarSrc} alt={userData?.username || "User"} />
