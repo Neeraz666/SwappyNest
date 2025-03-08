@@ -5,11 +5,13 @@ import { useAuth } from "../context/authContext"
 import { useNavigate } from "react-router-dom"
 import Logo from "../assets/nest-blue.svg"
 import genericProfileImage from "../assets/profile.png"
+import { useNotification } from "../context/notificationContext"
 
 const BASE_URL = "http://127.0.1:8000"
 
 const Navbar = () => {
   const { isAuth, logout, userData, fetchUserData } = useAuth()
+  const { showNotification } = useNotification() 
   const navigate = useNavigate()
   const [searchQuery, setSearchQuery] = useState("")
   const [avatarSrc, setAvatarSrc] = useState(genericProfileImage)
@@ -71,6 +73,18 @@ const Navbar = () => {
   const handleProfileClick = () => {
     if (isAuth && userData?.id) {
       navigate(`/profile/${userData.id}`)
+    }
+  }
+
+  // Handle logout with notification
+  const handleLogout = async () => {
+    try {
+      await logout()
+      showNotification("You have been successfully logged out", "success")
+      navigate("/")
+    } catch (error) {
+      console.error("Error during logout:", error)
+      showNotification("There was a problem logging out", "error")
     }
   }
 
@@ -145,7 +159,7 @@ const Navbar = () => {
               <Avatar src={avatarSrc} alt={userData?.username || "User"} />
             </IconButton>
           )}
-          <Button variant="contained" color="primary" onClick={isAuth ? logout : () => navigate("/login")}>
+          <Button variant="contained" color="primary" onClick={isAuth ? handleLogout : () => navigate("/login")}>
             {isAuth ? "Logout" : "Login"}
           </Button>
         </Box>
