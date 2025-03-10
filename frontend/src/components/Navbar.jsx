@@ -7,7 +7,7 @@ import Logo from "../assets/nest-blue.svg"
 import genericProfileImage from "../assets/profile.png"
 import { useNotification } from "../context/notificationContext"
 
-const BASE_URL = "http://127.0.1:8000"
+const BASE_URL = "http://127.0.0.1:8000"
 
 const Navbar = () => {
   const { isAuth, logout, userData, fetchUserData } = useAuth()
