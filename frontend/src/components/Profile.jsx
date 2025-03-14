@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useEffect } from "react"
 import { useParams } from "react-router-dom"
 import {
@@ -66,6 +64,7 @@ export default function Profile() {
 
   const [reviewerInfo, setReviewerInfo] = useState({})
 
+  const isAuthenticatedAndNotOwnProfile = userData && userData.id !== Number.parseInt(userId)
   const toggleReviewExpansion = (reviewId) => {
     setExpandedReviews((prev) => ({
       ...prev,
@@ -85,11 +84,7 @@ export default function Profile() {
       const isAuthenticatedAndOwnProfile = userData && userData.id === Number.parseInt(userId)
 
       if (isAuthenticatedAndOwnProfile) {
-        const reviewsResponse = await axios.get(`${BASE_URL}/api/user/byuserreviewlist/${userId}/`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-          },
-        })
+        const reviewsResponse = await axios.get(`${BASE_URL}/api/user/byuserreviewlist/${userId}/`)
         setUserReviews(reviewsResponse.data)
 
         // Fetch reviewer information for each review
@@ -105,12 +100,7 @@ export default function Profile() {
       // Check if the authenticated user has already reviewed this profile user
       if (isAuthenticatedAndNotOwnProfile) {
         try {
-          const userReviewsResponse = await axios.get(`${BASE_URL}/api/user/byuserreviewlist/${userData.id}/`, {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-            },
-          })
-
+          const userReviewsResponse = await axios.get(`${BASE_URL}/api/user/byuserreviewlist/${userData.id}/`)
           // Find if there's an existing review for this profile user
           const review = userReviewsResponse.data.find((r) => r.reviewed_user === Number(userId))
           if (review) {
@@ -190,12 +180,7 @@ export default function Profile() {
           reviewed_user: user.email,
           rating,
           content: reviewContent,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-          },
-        },
+        }
       )
 
       if (response.data.success) {
@@ -242,7 +227,7 @@ export default function Profile() {
   }
 
   const isAuthenticatedAndOwnProfile = userData && userData.id === Number.parseInt(userId)
-  const isAuthenticatedAndNotOwnProfile = userData && userData.id !== Number.parseInt(userId)
+
 
   return (
     <MainLayout>
@@ -571,19 +556,19 @@ export default function Profile() {
         product={
           selectedProduct
             ? {
-                name: selectedProduct.productname,
-                uploadDate: selectedProduct.created_at,
-                condition: selectedProduct.condition,
-                purchaseYear: selectedProduct.purchaseyear,
-                description: selectedProduct.description,
-                images: selectedProduct.images.map((img) => `${BASE_URL}${img.image}`),
-                uploadedBy: user.username,
-                userId: user.id,
-                userProfilePic: user.profilephoto
-                  ? `${BASE_URL}${user.profilephoto}`
-                  : "/placeholder.svg?height=40&width=40",
-                id: selectedProduct.id,
-              }
+              name: selectedProduct.productname,
+              uploadDate: selectedProduct.created_at,
+              condition: selectedProduct.condition,
+              purchaseYear: selectedProduct.purchaseyear,
+              description: selectedProduct.description,
+              images: selectedProduct.images.map((img) => `${BASE_URL}${img.image}`),
+              uploadedBy: user.username,
+              userId: user.id,
+              userProfilePic: user.profilephoto
+                ? `${BASE_URL}${user.profilephoto}`
+                : "/placeholder.svg?height=40&width=40",
+              id: selectedProduct.id,
+            }
             : null
         }
       />

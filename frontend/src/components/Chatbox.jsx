@@ -15,6 +15,7 @@ import CloseIcon from "@mui/icons-material/Close"
 import { useAuth } from "../context/authContext"
 import AvatarComponent from "./AvatarComponent"
 import ProductModal from "./ProductModal"
+import axios from "axios"
 
 const BASE_URL = "http://127.0.0.1:8000"
 
@@ -102,38 +103,36 @@ const ChatBox = ({ chat, onClose }) => {
   }, [chat, userData.id, userData.username, scrollToBottom])
 
   useEffect(() => {
-    const token = localStorage.getItem("access_token")
+    if (chat && chat.id) {
+      setLoading(true);
 
-    if (token && chat && chat.id) {
-      setLoading(true)
-      fetch(`http://localhost:8000/api/chatapp/conversations/${chat.id}/messages/`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-        .then((response) => response.json())
-        .then((data) => {
-          setMessages(data.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp)))
-          setLoading(false)
-          setTimeout(scrollToBottom, 100) // Scroll after the messages are rendered
+      axios.get(`http://localhost:8000/api/chatapp/conversations/${chat.id}/messages/`)
+        .then((response) => {
+          // Axios automatically parses JSON, so we can use response.data directly
+          const data = response.data;
+          setMessages(data.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp)));
+          setLoading(false);
+          setTimeout(scrollToBottom, 100); // Scroll after the messages are rendered
         })
         .catch((error) => {
-          console.error("Error fetching messages:", error)
-          setLoading(false)
-          setConnectionError(true)
-        })
+          console.error("Error fetching messages:", error);
+          setLoading(false);
+          setConnectionError(true);
+        });
     }
 
-    const ws = connectWebSocket()
+    const ws = connectWebSocket();
 
     return () => {
       if (reconnectTimeoutRef.current) {
-        clearTimeout(reconnectTimeoutRef.current)
+        clearTimeout(reconnectTimeoutRef.current);
       }
       if (ws) {
-        console.log("Closing WebSocket connection")
-        ws.close()
+        console.log("Closing WebSocket connection");
+        ws.close();
       }
-    }
-  }, [chat, scrollToBottom, connectWebSocket])
+    };
+  }, [chat, scrollToBottom, connectWebSocket]);
 
   useEffect(() => {
     scrollToBottom()
@@ -165,6 +164,7 @@ const ChatBox = ({ chat, onClose }) => {
   }
 
   const handleProductClick = (product, msg) => {
+    console.log("Product clicked:", product);
     let productOwner = { id: null, username: null, profilephoto: null };
 
     try {
@@ -181,6 +181,7 @@ const ChatBox = ({ chat, onClose }) => {
         ? { id: userData.id, username: userData.username, profilephoto: userData.profilephoto }
         : { id: chat.otherParticipant.id, username: chat.otherParticipant.username, profilephoto: chat.otherParticipant.profilephoto };
     }
+    console.log("product", productOwner)
 
     const formattedProduct = {
       id: product.id,
@@ -196,6 +197,7 @@ const ChatBox = ({ chat, onClose }) => {
     };
 
     setSelectedModalProduct(formattedProduct);
+    console.log("Selected product:", formattedProduct);
     setProductModalOpen(true);
   };
 

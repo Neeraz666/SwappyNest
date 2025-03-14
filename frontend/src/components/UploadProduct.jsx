@@ -11,6 +11,8 @@ import {
   CircularProgress,
   IconButton,
   Grid,
+  Snackbar,
+  Alert,
 } from "@mui/material"
 import { useNavigate } from "react-router-dom"
 import axios from "axios"
@@ -34,34 +36,34 @@ const UploadProduct = () => {
   const [imagePreviews, setImagePreviews] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  })
 
   useEffect(() => {
     const fetchInterestedProducts = async () => {
       try {
-        const response = await axios.get("http://localhost:8000/api/products/interest/", {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-          },
-        });
-  
-        const interestedProducts = response.data.interested_products;
-  
+        const response = await axios.get("http://localhost:8000/api/products/interest/")
+
+        const interestedProducts = response.data.interested_products
+
         setProductData((prevData) => ({
           ...prevData,
           interested_products: Array.isArray(interestedProducts) ? interestedProducts : [],
-        }));
+        }))
       } catch (error) {
-        console.error("Error fetching interested products:", error);
+        console.error("Error fetching interested products:", error)
         setProductData((prevData) => ({
           ...prevData,
           interested_products: [],
-        }));
+        }))
       }
-    };
-  
-    fetchInterestedProducts();
-  }, []);
-  
+    }
+
+    fetchInterestedProducts()
+  }, [])
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -71,14 +73,12 @@ const UploadProduct = () => {
     }))
   }
 
-  
-
   const handleInterestedProductsChange = (e) => {
     setProductData((prevData) => ({
       ...prevData,
       interested_products: e.target.value,
-    }));
-  };
+    }))
+  }
 
   const handleImageChange = (e) => {
     const files = e.target.files
@@ -106,46 +106,71 @@ const UploadProduct = () => {
     setImagePreviews(updatedPreviews)
   }
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-  
-    if (productData.images.length === 0) {
-      setError("Please upload at least one image.");
-      setLoading(false);
-      return;
+  const handleCloseSnackbar = (event, reason) => {
+    if (reason === "clickaway") {
+      return
     }
-  
-    const formData = new FormData();
+    setSnackbar({ ...snackbar, open: false })
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
+
+    if (productData.images.length === 0) {
+      setError("Please upload at least one image.")
+      setSnackbar({
+        open: true,
+        message: "Please upload at least one image.",
+        severity: "error",
+      })
+      setLoading(false)
+      return
+    }
+
+    const formData = new FormData()
     for (const key in productData) {
       if (key === "images") {
         Array.from(productData[key]).forEach((image) => {
-          formData.append("images", image);
-        });
+          formData.append("images", image)
+        })
       } else if (key === "interested_products") {
-        formData.append(key, JSON.stringify(productData[key])); // Ensure this is a valid JSON string
+        formData.append(key, JSON.stringify(productData[key])) // Ensure this is a valid JSON string
       } else {
-        formData.append(key, productData[key]);
+        formData.append(key, productData[key])
       }
     }
-  
+
     try {
       const response = await axios.post("http://localhost:8000/api/products/uploadproduct/", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
         },
-      });
-      console.log(response.data);
-      navigate("/");
+      })
+      console.log(response.data)
+      setSnackbar({
+        open: true,
+        message: "Product uploaded successfully!",
+        severity: "success",
+      })
+      setTimeout(() => {
+        navigate("/")
+      }, 1000)
     } catch (error) {
-      setError("There was an issue uploading your product. Please try again.");
-      console.error(error);
+      const errorMessage =
+        error.response?.data?.message || "There was an issue uploading your product. Please try again."
+      setError(errorMessage)
+      setSnackbar({
+        open: true,
+        message: errorMessage,
+        severity: "error",
+      })
+      console.error(error)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
   return (
     <SimpleLayout>
       <Box sx={{ padding: "2rem", maxWidth: "800px", margin: "0 auto" }}>
@@ -298,6 +323,16 @@ const UploadProduct = () => {
           </Button>
         </form>
       </Box>
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+      >
+        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: "100%" }}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </SimpleLayout>
   )
 }

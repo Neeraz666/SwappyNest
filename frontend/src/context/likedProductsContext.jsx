@@ -16,11 +16,7 @@ export const LikedProductsProvider = ({ children }) => {
 
   const fetchLikedProducts = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/api/products/listlikedproducts/', {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
-        },
-      });
+      const response = await axios.get('http://localhost:8000/api/products/listlikedproducts/');
       setLikedProducts(response.data);
     } catch (error) {
       console.error('Error fetching liked products:', error);
@@ -31,12 +27,7 @@ export const LikedProductsProvider = ({ children }) => {
     try {
       const response = await axios.post(
         'http://localhost:8000/api/products/likeproduct/',
-        { product_id: productId },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('access_token')}`,
-          },
-        }
+        { product_id: productId }
       );
       fetchLikedProducts();
       return response.data.success;

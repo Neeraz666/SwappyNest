@@ -1,104 +1,110 @@
-import React, { useState } from 'react';
-import { TextField, Button, IconButton, Checkbox, Typography, Container, Box, Link, Alert } from '@mui/material';
-import { Visibility, VisibilityOff } from '@mui/icons-material';
-import axios from 'axios';
-import { useAuth } from '../context/authContext';
-import SimpleLayout from '../pages/SimpleLayout';
-
+import { useState } from "react"
+import { TextField, Button, IconButton, Checkbox, Typography, Container, Box, Link, Alert } from "@mui/material"
+import { Visibility, VisibilityOff } from "@mui/icons-material"
+import axios from "axios"
+import { useAuth } from "../context/authContext"
+import { useNotification } from "../context/notificationContext"
+import { useNavigate } from "react-router-dom"
+import SimpleLayout from "../pages/SimpleLayout"
 
 export const Login = () => {
-  const [isLoginForm, setIsLoginForm] = useState(true);
-  const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState('');
-  const [username, setUsername] = useState('');
-  const [firstname, setFirstname] = useState('');
-  const [lastname, setLastname] = useState('');
-  const [phone, setPhone] = useState('');
-  const [address, setAddress] = useState('');
-  const [profilephoto, setProfilephoto] = useState(null);
-  const [preview, setPreview] = useState(null);
-  const [password, setPassword] = useState('');
-  const [password1, setPassword1] = useState('');
-  const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoginForm, setIsLoginForm] = useState(true)
+  const [showPassword, setShowPassword] = useState(false)
+  const [email, setEmail] = useState("")
+  const [username, setUsername] = useState("")
+  const [firstname, setFirstname] = useState("")
+  const [lastname, setLastname] = useState("")
+  const [phone, setPhone] = useState("")
+  const [address, setAddress] = useState("")
+  const [profilephoto, setProfilephoto] = useState(null)
+  const [preview, setPreview] = useState(null)
+  const [password, setPassword] = useState("")
+  const [password1, setPassword1] = useState("")
+  const [error, setError] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
 
-  const { login } = useAuth();
+  const { login } = useAuth()
+  const { showNotification } = useNotification()
+  const navigate = useNavigate()
 
   const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    setProfilephoto(file);
+    const file = e.target.files[0]
+    setProfilephoto(file)
 
     if (file) {
-      setPreview(URL.createObjectURL(file));
+      setPreview(URL.createObjectURL(file))
     } else {
-      setPreview(null);
+      setPreview(null)
     }
-  };
+  }
 
   const submitLogin = async (e) => {
-    e.preventDefault();
-    setError('');
-    setIsLoading(true);
+    e.preventDefault()
+    setError("")
+    setIsLoading(true)
     try {
-      await login(email, password);
+      await login(email, password)
+      showNotification("Login successful!", "success")
+      navigate("/")
     } catch (error) {
-      console.error('Error during login:', error);
-      setError('Login failed. Please check your credentials and try again.');
+      console.error("Error during login:", error)
+      setError("Login failed. Please check your credentials and try again.")
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   const submitSignup = async (e) => {
-    e.preventDefault();
-    setError('');
-    setIsLoading(true);
+    e.preventDefault()
+    setError("")
+    setIsLoading(true)
 
     if (password !== password1) {
-      setError('Passwords do not match!');
-      setIsLoading(false);
-      return;
+      setError("Passwords do not match!")
+      setIsLoading(false)
+      return
     }
 
-    const formData = new FormData();
-    formData.append('email', email);
-    formData.append('username', username);
-    formData.append('firstname', firstname);
-    formData.append('lastname', lastname);
-    formData.append('phone', phone);
-    formData.append('address', address);
-    formData.append('profilephoto', profilephoto);
-    formData.append('password', password);
-    formData.append('password1', password1);
+    const formData = new FormData()
+    formData.append("email", email)
+    formData.append("username", username)
+    formData.append("firstname", firstname)
+    formData.append("lastname", lastname)
+    formData.append("phone", phone)
+    formData.append("address", address)
+    formData.append("profilephoto", profilephoto)
+    formData.append("password", password)
+    formData.append("password1", password1)
 
     try {
-      await axios.post('http://localhost:8000/api/user/signup/', formData, {
+      await axios.post("http://localhost:8000/api/user/signup/", formData, {
         headers: {
-          'Content-Type': 'multipart/form-data',
+          "Content-Type": "multipart/form-data",
         },
-      });
-      setIsLoginForm(true);
-      setError('');
+      })
+      showNotification("Account created successfully! You can now login.", "success")
+      setIsLoginForm(true)
+      setError("")
     } catch (error) {
       if (error.response && error.response.data) {
-        setError(error.response.data.error || JSON.stringify(error.response.data));
+        setError(error.response.data.error || JSON.stringify(error.response.data))
       } else {
-        console.error('Error signing up:', error);
-        setError('An error occurred while signing up. Please try again.');
+        console.error("Error signing up:", error)
+        setError("An error occurred while signing up. Please try again.")
       }
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   const toggleForm = () => {
-    setIsLoginForm(!isLoginForm);
-    setError('');
-  };
+    setIsLoginForm(!isLoginForm)
+    setError("")
+  }
 
   const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
+    setShowPassword(!showPassword)
+  }
 
   return (
     <SimpleLayout>
@@ -110,11 +116,11 @@ export const Login = () => {
           sx={{ mt: 8, p: 3, boxShadow: 3, borderRadius: 2 }}
         >
           <Typography component="h1" variant="h5" mb={2}>
-            {isLoginForm ? 'Login' : 'Signup'}
+            {isLoginForm ? "Login" : "Signup"}
           </Typography>
           <form onSubmit={isLoginForm ? submitLogin : submitSignup}>
             {error && (
-              <Alert severity="error" sx={{ mt: 2, mb: 2 }}>
+              <Alert severity="error" sx={{ mt: 2, mb: 2 }} onClose={() => setError("")}>
                 {error}
               </Alert>
             )}
@@ -173,12 +179,7 @@ export const Login = () => {
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
                 />
-                <Button
-                  variant="outlined"
-                  component="label"
-                  fullWidth
-                  sx={{ mt: 1 }}
-                >
+                <Button variant="outlined" component="label" fullWidth sx={{ mt: 1 }}>
                   Upload Profile Photo
                   <input type="file" hidden onChange={handleFileChange} />
                 </Button>
@@ -186,9 +187,9 @@ export const Login = () => {
                 {preview && (
                   <Box mt={2} display="flex" justifyContent="center">
                     <img
-                      src={preview}
+                      src={preview || "/placeholder.svg"}
                       alt="Profile Preview"
-                      style={{ width: '100px', height: '100px', borderRadius: '50%' }}
+                      style={{ width: "100px", height: "100px", borderRadius: "50%" }}
                     />
                   </Box>
                 )}
@@ -200,7 +201,7 @@ export const Login = () => {
               margin="normal"
               fullWidth
               required
-              type={showPassword ? 'text' : 'password'}
+              type={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               InputProps={{
@@ -221,7 +222,7 @@ export const Login = () => {
                 margin="normal"
                 fullWidth
                 required
-                type={showPassword ? 'text' : 'password'}
+                type={showPassword ? "text" : "password"}
                 value={password1}
                 onChange={(e) => setPassword1(e.target.value)}
                 InputProps={{
@@ -247,28 +248,14 @@ export const Login = () => {
                 </Link>
               </Box>
             )}
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              color="primary"
-              disabled={isLoading}
-              sx={{ mt: 2 }}
-            >
-              {isLoading ? 'Processing...' : (isLoginForm ? 'Login Now' : 'Signup Now')}
+            <Button type="submit" fullWidth variant="contained" color="primary" disabled={isLoading} sx={{ mt: 2 }}>
+              {isLoading ? "Processing..." : isLoginForm ? "Login Now" : "Signup Now"}
             </Button>
             <Box mt={2} textAlign="center">
               <Typography variant="body2">
-                {isLoginForm
-                  ? "Don't have an account? "
-                  : 'Already have an account? '}
-                <Link
-                  component="button"
-                  variant="body2"
-                  onClick={toggleForm}
-                  sx={{ cursor: 'pointer' }}
-                >
-                  {isLoginForm ? 'Signup' : 'Login'}
+                {isLoginForm ? "Don't have an account? " : "Already have an account? "}
+                <Link component="button" variant="body2" onClick={toggleForm} sx={{ cursor: "pointer" }}>
+                  {isLoginForm ? "Signup" : "Login"}
                 </Link>
               </Typography>
             </Box>
@@ -276,7 +263,8 @@ export const Login = () => {
         </Box>
       </Container>
     </SimpleLayout>
-  );
-};
+  )
+}
 
-export default Login;
+export default Login
+

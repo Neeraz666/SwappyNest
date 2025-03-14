@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useEffect } from "react"
 import {
   Dialog,
@@ -35,11 +33,7 @@ export default function LikedPostsModal({ open, onClose }) {
   const fetchLikedProducts = async () => {
     setLoading(true)
     try {
-      const response = await axios.get(`${BASE_URL}/api/products/listlikedproducts/`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-        },
-      })
+      const response = await axios.get(`${BASE_URL}/api/products/listlikedproducts/`)
       setLikedProducts(response.data || [])
     } catch (error) {
       console.error("Error fetching liked products:", error)
