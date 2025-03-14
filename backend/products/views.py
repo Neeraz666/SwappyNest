@@ -91,73 +91,35 @@ class InterestDetailView(RetrieveAPIView):
 
 class ListAllProduct(ListAPIView):
     """
-    Recommends products based on:
-    - User's liked products (TF-IDF based content filtering)
-    - User's interested categories
-    - Excludes products created by the logged-in user
+    A view that lists products with a focus on the user's interested products, 
+    with general products included as well. The list is shuffled to provide 
+    variety with every request.
     """
-
-    permission_classes = (permissions.AllowAny,)
-    serializer_class = ProductSerializer
+    permission_classes = (permissions.AllowAny, )
 
     def get_queryset(self):
-        user = self.request.user
-        print(user)
-        all_products = Product.objects.all()
+        # Seed the random number generator for shuffling
+        random.seed(random.random())  
+        current_user = self.request.user
+        print(current_user)
 
-        # If user is not authenticated, return all products in random order
-        if isinstance(user, AnonymousUser):
-            product_list = list(all_products)
-            random.shuffle(product_list)
-            return product_list
+        if current_user.is_authenticated:
+            interested_categories = Interest.objects.filter(user=current_user).values_list('interested_products', flat=True)
+            interested_categories = [category for sublist in interested_categories for category in sublist]
 
-        # Fetch user's liked products & interested categories
-        liked_product_data = LikedProduct.objects.filter(user=user).first()
-        interested_categories = Interest.objects.filter(user=user).values_list('interested_products', flat=True)
+            recommended_products = Product.objects.filter(category__in=interested_categories).exclude(user=current_user)
+            all_products = Product.objects.exclude(user=current_user)            
+            general_products = all_products.exclude(id__in=recommended_products)
 
-        liked_product_ids = liked_product_data.liked_products if liked_product_data else []
-        interested_categories = list(interested_categories) if interested_categories else []
+            combined_list = list(recommended_products) + list(general_products)
 
-        # Filter products based on interested categories
-        recommended_products = Product.objects.filter(category__in=interested_categories)
+        else:
+            combined_list = list(Product.objects.all())
 
-        # Extract product descriptions for TF-IDF processing
-        product_texts = [product.description for product in all_products]
-        product_ids = [product.id for product in all_products]
+        random.shuffle(combined_list)
+        return combined_list
 
-        # Apply TF-IDF to compare product similarities
-        if liked_product_ids:
-            liked_products = Product.objects.filter(id__in=liked_product_ids)
-            liked_texts = [product.description for product in liked_products]
-
-            vectorizer = TfidfVectorizer(stop_words="english")
-            tfidf_matrix = vectorizer.fit_transform(product_texts + liked_texts)
-
-            # Compute cosine similarity between liked products and all products
-            similarity_scores = cosine_similarity(tfidf_matrix[-len(liked_texts):], tfidf_matrix[:-len(liked_texts)])
-
-            # Rank products based on similarity scores
-            recommended_indices = similarity_scores.mean(axis=0).argsort()[::-1]
-            recommended_product_ids = [product_ids[idx] for idx in recommended_indices]
-
-            recommended_products = Product.objects.filter(id__in=recommended_product_ids)
-
-        # Exclude the logged-in user's own products
-        final_products = recommended_products.exclude(user=user)
-
-        # Convert to list and shuffle for randomness
-        final_products = list(final_products)
-        print(final_products)
-        random.shuffle(final_products)
-
-        if not final_products:
-            product_list = list(all_products)
-            random.shuffle(product_list)
-            return product_list
-
-        return final_products
-
-
+    serializer_class = ProductSerializer
 
 
 
@@ -278,7 +240,6 @@ class ListLikedProducts(ListAPIView):
     
     def get_queryset(self):
         currentuser = self.request.user 
-
         try:
             liked_product = LikedProduct.objects.get(user=currentuser)
             print(liked_product.liked_products)

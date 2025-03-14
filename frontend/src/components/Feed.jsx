@@ -1,13 +1,13 @@
 import { useEffect, useState, useCallback, useRef } from "react"
 import { Box, Typography, IconButton, Card, CardContent, CardActions, CircularProgress, Container } from "@mui/material"
 import { FavoriteBorder, Favorite, Share } from "@mui/icons-material"
-import { useAuth } from '../context/authContext';
-import { useLikedProducts } from "../context/likedProductsContext";
+import { useAuth } from "../context/authContext"
+import { useLikedProducts } from "../context/likedProductsContext"
 import genericProfileImage from "../assets/profile.png"
 import ProductModal from "./ProductModal"
 import AvatarComponent from "./AvatarComponent"
 import SwapOfferModal from "./SawpOfferModal"
-
+import axios from "axios"
 
 const BASE_URL = "http://127.0.0.1:8000"
 
@@ -19,11 +19,11 @@ export default function Feed({ initialProducts = [], searchQuery, categorySlug }
   const [loading, setLoading] = useState(false)
   const [hasMore, setHasMore] = useState(true)
   const [nextPageUrl, setNextPageUrl] = useState(null)
-  const { isAuth, userData } = useAuth()
+  const { isAuth, userData, getAccessToken } = useAuth()
   const loader = useRef(null)
   const observer = useRef(null)
   const [swapOfferModalOpen, setSwapOfferModalOpen] = useState(false)
-  const { likedProducts, toggleLike } = useLikedProducts();
+  const { likedProducts, toggleLike } = useLikedProducts()
 
   const handleOpenSwapOffer = (product) => {
     setSelectedProduct(product)
@@ -46,61 +46,58 @@ export default function Feed({ initialProducts = [], searchQuery, categorySlug }
   )
 
   const fetchProducts = useCallback(async () => {
-    if (loading || !hasMore) return
-    setLoading(true)
+    if (loading || !hasMore) return;
+    setLoading(true);
+
     try {
-      let url
-      if (categorySlug) {
-        url = nextPageUrl || `${BASE_URL}/api/products/${categorySlug}/`
-      } else if (searchQuery) {
-        url = nextPageUrl || `${BASE_URL}/api/products/search/?q=${searchQuery}`
-      } else {
-        url = nextPageUrl || `${BASE_URL}/api/products/listallproduct/`
-      }
+        const url =
+            nextPageUrl ||
+            (categorySlug
+                ? `${BASE_URL}/api/products/${categorySlug}/`
+                : searchQuery
+                ? `${BASE_URL}/api/products/search/?q=${searchQuery}`
+                : `${BASE_URL}/api/products/listallproduct/`);
 
-      // Add this check to prevent unnecessary API calls
-      if (!url) {
-        setLoading(false)
-        return
-      }
+        if (!url) {
+            setLoading(false);
+            return;
+        }
 
-      console.log(`Fetching products from: ${url}`)
-      const response = await fetch(url)
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-      const data = await response.json()
-      console.log("Fetched data:", data)
+        console.log(`Fetching products from: ${url}`);
 
-      if (data.results && data.results.length > 0) {
-        setProducts((prevProducts) => {
-          const newProducts = data.results.filter(
-            (newProduct) => !prevProducts.some((existingProduct) => existingProduct.id === newProduct.id),
-          )
-          console.log(`Adding ${newProducts.length} new products`)
-          return [...prevProducts, ...newProducts]
-        })
-        setNextPageUrl(data.next)
-        setHasMore(!!data.next)
-      } else if (Array.isArray(data) && data.length > 0) {
-        // Handle the case where the API returns an array directly
-        setProducts((prevProducts) => {
-          const newProducts = data.filter(
-            (newProduct) => !prevProducts.some((existingProduct) => existingProduct.id === newProduct.id),
-          )
-          console.log(`Adding ${newProducts.length} new products`)
-          return [...prevProducts, ...newProducts]
-        })
-        setHasMore(false) // Assuming no pagination for this case
-      } else {
-        setHasMore(false)
-      }
+        const headers = isAuth ? { Authorization: `Bearer ${getAccessToken()}` } : {};
+        const response = await axios.get(url, { headers });
+        const data = response.data;
+
+        console.log("Fetched data:", data);
+
+        const mergeProducts = (newData) => {
+            setProducts((prevProducts) => {
+                const newProducts = newData.filter(
+                    (newProduct) => !prevProducts.some((existingProduct) => existingProduct.id === newProduct.id)
+                );
+                console.log(`Adding ${newProducts.length} new products`);
+                return [...prevProducts, ...newProducts];
+            });
+        };
+
+        if (data.results?.length) {
+            mergeProducts(data.results);
+            setNextPageUrl(data.next);
+            setHasMore(!!data.next);
+        } else if (Array.isArray(data) && data.length) {
+            mergeProducts(data);
+            setHasMore(false); 
+        } else {
+            setHasMore(false);
+        }
     } catch (error) {
-      console.error("Error fetching products:", error)
+        console.error("Error fetching products:", error);
     } finally {
-      setLoading(false)
+        setLoading(false);
     }
-  }, [nextPageUrl, loading, hasMore, categorySlug, searchQuery])
+}, [nextPageUrl, loading, hasMore, categorySlug, searchQuery]);
+
 
   useEffect(() => {
     if (initialProducts.length === 0 && !loading && products.length === 0) {
@@ -173,8 +170,6 @@ export default function Feed({ initialProducts = [], searchQuery, categorySlug }
         </Box>
       )
     }
-
-
 
     return (
       <Box
@@ -267,7 +262,7 @@ export default function Feed({ initialProducts = [], searchQuery, categorySlug }
         {products.map((product, index) => {
           const { id, productname, description, purchaseyear, condition, created_at, user, images, category } = product
           const avatarSrc = user.profilephoto ? getFullImageUrl(user.profilephoto) : genericProfileImage
-          const isProductOwner = userData?.id === product.user.id;
+          const isProductOwner = userData?.id === product.user.id
 
           return (
             <Card
@@ -471,7 +466,7 @@ export default function Feed({ initialProducts = [], searchQuery, categorySlug }
                 : genericProfileImage,
               userId: selectedProduct.user.id,
               category: selectedProduct.category,
-              id: selectedProduct.id
+              id: selectedProduct.id,
             }
             : null
         }

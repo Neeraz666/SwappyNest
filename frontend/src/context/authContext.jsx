@@ -294,6 +294,7 @@ export const AuthProvider = ({ children }) => {
     error,
     updateUserData,
     fetchUserData,
+    getAccessToken,
     refreshAccessToken
   }
 
