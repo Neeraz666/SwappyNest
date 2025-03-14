@@ -148,7 +148,6 @@ const UploadProduct = () => {
           "Content-Type": "multipart/form-data",
         },
       })
-      console.log(response.data)
       setSnackbar({
         open: true,
         message: "Product uploaded successfully!",

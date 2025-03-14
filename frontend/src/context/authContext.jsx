@@ -23,37 +23,34 @@ export const AuthProvider = ({ children }) => {
 
   const getAccessToken = () => {
     const token = localStorage.getItem("access_token")
-    console.log("Retrieved access token:", token)
     return token
   }
 
   const getRefreshToken = () => localStorage.getItem("refresh_token")
 
   const setTokens = (access, refresh) => {
-    console.log("Setting tokens:", { access, refresh })
     localStorage.setItem("access_token", access)
     localStorage.setItem("refresh_token", refresh)
   }
 
   const clearTokens = () => {
-    console.log("Clearing tokens")
     localStorage.removeItem("access_token")
     localStorage.removeItem("refresh_token")
   }
 
   const isTokenExpired = (token) => {
     if (!token) {
-      console.log("Token is null or undefined")
+
       return true
     }
     try {
       const decoded = JSON.parse(atob(token.split(".")[1]))
       const currentTime = Math.floor(Date.now() / 1000)
       const isExpired = decoded.exp < currentTime
-      console.log("Token expiration check:", { isExpired, exp: decoded.exp, currentTime })
+
       return isExpired
     } catch (error) {
-      console.error("Error decoding token:", error)
+
       return true
     }
   }
@@ -83,7 +80,7 @@ export const AuthProvider = ({ children }) => {
       axios.defaults.headers.common['Authorization'] = `Bearer ${access}`;
       return access;
     } catch (error) {
-      console.error('Failed to refresh token:', error);
+
 
       // If the refresh token is invalid, clear tokens and redirect to login
       clearTokens();
@@ -104,12 +101,12 @@ export const AuthProvider = ({ children }) => {
         if (!config.url.includes("/api/token/refresh/")) {
           const accessToken = getAccessToken()
           if (accessToken && isTokenExpired(accessToken)) {
-            console.log("Access token expired, attempting to refresh")
+      
             try {
               const newToken = await refreshAccessToken()
               config.headers.Authorization = `Bearer ${newToken}`
             } catch (error) {
-              console.error("Failed to refresh token in interceptor:", error)
+        
               // Let the request proceed without a token, it will fail and be caught by the response interceptor
             }
           }
@@ -163,10 +160,10 @@ export const AuthProvider = ({ children }) => {
         headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
       })
 
-      console.log("Fetched User Data:", response.data)
+
       return response.data
     } catch (error) {
-      console.error("Failed to fetch user data:", error)
+
       setError("Failed to fetch user data. Please try logging in again.")
       throw error
     }
@@ -175,9 +172,9 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     setError(null)
     try {
-      console.log("Attempting login with:", { email })
+
       const response = await axios.post(`${BASE_URL}/api/token/`, { email, password })
-      console.log("Login response:", response.data)
+
 
       const { access, refresh } = response.data
 
@@ -189,12 +186,12 @@ export const AuthProvider = ({ children }) => {
       setUserData(userData)
       navigate("/")
     } catch (error) {
-      console.error("Login error:", error)
+
       if (error.response) {
-        console.log("Error response:", error.response.data)
+  
         setError(`Login failed: ${error.response.data.detail || "Please check your credentials."}`)
       } else if (error.request) {
-        console.log("Error request:", error.request)
+  
         setError("No response received from the server. Please try again.")
       } else {
         setError("An unexpected error occurred. Please try again.")
@@ -225,7 +222,7 @@ export const AuthProvider = ({ children }) => {
       setUserData(null)
       navigate("/")
     } catch (error) {
-      console.error("Logout error:", error)
+
       setError("There was an issue logging out. Please try again.")
     }
   }
@@ -237,7 +234,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const checkAuth = async () => {
       const accessToken = getAccessToken()
-      console.log("Access Token:", accessToken)
+
 
       if (accessToken) {
         if (!isTokenExpired(accessToken)) {
@@ -247,7 +244,7 @@ export const AuthProvider = ({ children }) => {
             setUserData(userData)
             axios.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`
           } catch (error) {
-            console.error("Error fetching user data during auth check:", error)
+      
             // Try to refresh the token instead of immediately clearing
             try {
               await refreshAccessToken()
@@ -255,26 +252,26 @@ export const AuthProvider = ({ children }) => {
               const userData = await fetchUserData()
               setUserData(userData)
             } catch (refreshError) {
-              console.error("Failed to refresh token during auth check:", refreshError)
+        
               clearTokens()
               setIsAuth(false)
             }
           }
         } else {
-          console.log("Token expired, attempting to refresh")
+    
           try {
             await refreshAccessToken()
             setIsAuth(true)
             const userData = await fetchUserData()
             setUserData(userData)
           } catch (error) {
-            console.error("Failed to refresh token during auth check:", error)
+      
             clearTokens()
             setIsAuth(false)
           }
         }
       } else {
-        console.log("No access token found")
+  
         clearTokens()
         setIsAuth(false)
       }

@@ -50,7 +50,6 @@ const SearchResults = () => {
         throw new Error(`HTTP error! Status: ${response.status}`)
       }
       const data = await response.json()
-      console.log("Search results:", data.results || data)
       setFetchedResults(data.results || data)
     } catch (error) {
       console.error("Error fetching search results:", error)

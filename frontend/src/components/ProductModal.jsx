@@ -12,7 +12,6 @@ export default function ProductModal({ open, onClose, product }) {
   const [swapOfferModalOpen, setSwapOfferModalOpen] = useState(false)
   const { isAuth, userData } = useAuth()
   const { likedProducts, toggleLike } = useLikedProducts();
-  console.log(product)
 
   const responsive = {
     desktop: {

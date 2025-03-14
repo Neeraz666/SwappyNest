@@ -50,11 +50,10 @@ const ChatBox = ({ chat, onClose }) => {
     }
 
     if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
-      console.log("WebSocket already connected")
+
       return socketRef.current
     }
 
-    console.log("Attempting to connect WebSocket")
     const participantIds = chat.participants
       .map((p) => p.id)
       .sort()
@@ -63,12 +62,12 @@ const ChatBox = ({ chat, onClose }) => {
     socketRef.current = ws
 
     ws.onopen = () => {
-      console.log("WebSocket connected successfully")
+
       setConnectionError(false)
     }
 
     ws.onmessage = (event) => {
-      console.log("WebSocket message received:", event.data)
+
       const data = JSON.parse(event.data)
       setMessages((prevMessages) => {
         const messageExists = prevMessages.some((msg) => msg.id === data.id)
@@ -87,7 +86,7 @@ const ChatBox = ({ chat, onClose }) => {
     }
 
     ws.onclose = (event) => {
-      console.log("WebSocket closed:", event)
+
       if (!event.wasClean) {
         setConnectionError(true)
         if (!reconnectTimeoutRef.current) {
@@ -128,7 +127,7 @@ const ChatBox = ({ chat, onClose }) => {
         clearTimeout(reconnectTimeoutRef.current);
       }
       if (ws) {
-        console.log("Closing WebSocket connection");
+  
         ws.close();
       }
     };
@@ -164,7 +163,6 @@ const ChatBox = ({ chat, onClose }) => {
   }
 
   const handleProductClick = (product, msg) => {
-    console.log("Product clicked:", product);
     let productOwner = { id: null, username: null, profilephoto: null };
 
     try {
@@ -181,7 +179,6 @@ const ChatBox = ({ chat, onClose }) => {
         ? { id: userData.id, username: userData.username, profilephoto: userData.profilephoto }
         : { id: chat.otherParticipant.id, username: chat.otherParticipant.username, profilephoto: chat.otherParticipant.profilephoto };
     }
-    console.log("product", productOwner)
 
     const formattedProduct = {
       id: product.id,
@@ -197,7 +194,6 @@ const ChatBox = ({ chat, onClose }) => {
     };
 
     setSelectedModalProduct(formattedProduct);
-    console.log("Selected product:", formattedProduct);
     setProductModalOpen(true);
   };
 

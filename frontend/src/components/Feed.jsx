@@ -36,7 +36,7 @@ export default function Feed({ initialProducts = [], searchQuery, categorySlug }
       if (observer.current) observer.current.disconnect()
       observer.current = new IntersectionObserver((entries) => {
         if (entries[0].isIntersecting && hasMore) {
-          console.log("Last product is visible, fetching more products")
+          
           fetchProducts()
         }
       })
@@ -63,20 +63,20 @@ export default function Feed({ initialProducts = [], searchQuery, categorySlug }
             return;
         }
 
-        console.log(`Fetching products from: ${url}`);
+        
 
         const headers = isAuth ? { Authorization: `Bearer ${getAccessToken()}` } : {};
         const response = await axios.get(url, { headers });
         const data = response.data;
 
-        console.log("Fetched data:", data);
+        
 
         const mergeProducts = (newData) => {
             setProducts((prevProducts) => {
                 const newProducts = newData.filter(
                     (newProduct) => !prevProducts.some((existingProduct) => existingProduct.id === newProduct.id)
                 );
-                console.log(`Adding ${newProducts.length} new products`);
+                
                 return [...prevProducts, ...newProducts];
             });
         };
@@ -92,7 +92,7 @@ export default function Feed({ initialProducts = [], searchQuery, categorySlug }
             setHasMore(false);
         }
     } catch (error) {
-        console.error("Error fetching products:", error);
+        
     } finally {
         setLoading(false);
     }

@@ -10,7 +10,6 @@ const Categories = () => {
   const [selectedCategory, setSelectedCategory] = useState(category);
 
   const handleCategoryClick = (categorySlug, categoryName) => {
-    console.log('Navigating to /searchedresult with state:', { category: categorySlug, results: [], query: categoryName });
     setSelectedCategory(categorySlug); // Update the selected category
     navigate('/searchedresult', { state: { category: categorySlug, results: [], query: categoryName } });
   };

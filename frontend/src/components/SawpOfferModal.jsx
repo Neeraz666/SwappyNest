@@ -34,7 +34,6 @@ const SwapOfferModal = ({ isOpen, onClose, selectedProduct }) => {
   const fetchUserProducts = async () => {
     try {
       const response = await axios.get(`${BASE_URL}/api/user/${userData.id}/products`)
-      console.log("Fetched user products:", response.data)
       setUserProducts(response.data)
     } catch (error) {
       console.error("Error fetching user products:", error)
@@ -144,13 +143,13 @@ const SwapOfferModal = ({ isOpen, onClose, selectedProduct }) => {
       onClose()
     }
 
-    ws.onerror = (error) => {
-      console.error("WebSocket error:", error)
-    }
+    // ws.onerror = (error) => {
+    //   console.error("WebSocket error:", error)
+    // }
 
-    ws.onclose = () => {
-      console.log("WebSocket connection closed")
-    }
+    // ws.onclose = () => {
+    //   console.log("WebSocket connection closed")
+    // }
   }
 
   return (

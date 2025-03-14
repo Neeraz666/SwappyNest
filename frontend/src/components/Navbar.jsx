@@ -58,7 +58,6 @@ const Navbar = () => {
     try {
       const response = await fetch(`${BASE_URL}/api/products/search/?q=${searchQuery}`)
       const data = await response.json()
-      console.log("Searched", data)
       navigate("/searchedresult", {
         state: {
           results: data.results || data, // Ensure we're passing the correct data structure
