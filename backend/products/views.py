@@ -2,6 +2,7 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework import permissions
 from .models import Product, Image, Interest, LikedProduct
+from django.contrib.auth.models import AnonymousUser
 from rest_framework.response import Response
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from .serializers import ProductSerializer, InterestSerializer
@@ -16,8 +17,6 @@ class UploadProduct(APIView):
 
     def post(self, request):
         try:
-            print("Request Data:", request.data)
-            print("Request Files:", request.FILES)
 
             currentuser = request.user
             productdata = request.data
@@ -30,15 +29,7 @@ class UploadProduct(APIView):
             new_interested_products = json.loads(productdata.get('interested_products', '[]'))
             category = productdata['category']
 
-            print("Product Name:", productname)
-            print("Description:", description)
-            print("Purchase Year:", purchaseyear)
-            print("Condition:", condition)
-            print("Category:", category)
-            print("Interested Products:", new_interested_products)
-
             # Save product without images
-            print("Saving Product...")
             product = Product.objects.create(
                 user=currentuser,
                 productname=productname,
@@ -50,9 +41,7 @@ class UploadProduct(APIView):
 
             # Handle multiple images (get from request.FILES)
             images = request.FILES.getlist('images')  # Fixed here
-            print("Saving Images...")
             for image in images:
-                print("Image:", image)
                 Image.objects.create(product=product, image=image)
 
             # Handle the interested products
@@ -101,42 +90,72 @@ class InterestDetailView(RetrieveAPIView):
 
 
 class ListAllProduct(ListAPIView):
-
     """
-        Need to make listings such that most of the products to show are the ones that the user is interested in and 
-        the rest are general products. Also, the products should be shuffled so that the user doesn't see the same everytime. 
+    Recommends products based on:
+    - User's liked products (TF-IDF based content filtering)
+    - User's interested categories
+    - Excludes products created by the logged-in user
     """
 
-    permission_classes = (permissions.AllowAny, )
-
-    def get_queryset(self):
-        a = random.random()  # Seed the random number generator
-        random.seed(a)
-        if self.request.user.is_authenticated:
-            # Get the interested products of the user
-            interested_category = Interest.objects.filter(user = self.request.user).values_list('interested_products', flat = True)
-            interested_category = [category for sublist in interested_category for category in sublist]  # Flatten the list
-            interested_category = list(interested_category)
-
-            # Get the products of the interested categories and combine with general
-            recommended_list = Product.objects.filter(category__in = interested_category)
-            allproduct = Product.objects.all()
-            generallist = allproduct.exclude(id__in = recommended_list)
-            combined_list = list(recommended_list) + list(generallist)  # Combine the two lists
-
-            # Shuffle the combined list
-            random.shuffle(combined_list)
-            return combined_list
-        
-        # If user is not authenticated, return all products in random order
-        allproduct = list(Product.objects.all())
-        random.shuffle(allproduct)
-        return (allproduct)
-    
+    permission_classes = (permissions.AllowAny,)
     serializer_class = ProductSerializer
 
+    def get_queryset(self):
+        user = self.request.user
+        print(user)
+        all_products = Product.objects.all()
 
+        # If user is not authenticated, return all products in random order
+        if isinstance(user, AnonymousUser):
+            product_list = list(all_products)
+            random.shuffle(product_list)
+            return product_list
 
+        # Fetch user's liked products & interested categories
+        liked_product_data = LikedProduct.objects.filter(user=user).first()
+        interested_categories = Interest.objects.filter(user=user).values_list('interested_products', flat=True)
+
+        liked_product_ids = liked_product_data.liked_products if liked_product_data else []
+        interested_categories = list(interested_categories) if interested_categories else []
+
+        # Filter products based on interested categories
+        recommended_products = Product.objects.filter(category__in=interested_categories)
+
+        # Extract product descriptions for TF-IDF processing
+        product_texts = [product.description for product in all_products]
+        product_ids = [product.id for product in all_products]
+
+        # Apply TF-IDF to compare product similarities
+        if liked_product_ids:
+            liked_products = Product.objects.filter(id__in=liked_product_ids)
+            liked_texts = [product.description for product in liked_products]
+
+            vectorizer = TfidfVectorizer(stop_words="english")
+            tfidf_matrix = vectorizer.fit_transform(product_texts + liked_texts)
+
+            # Compute cosine similarity between liked products and all products
+            similarity_scores = cosine_similarity(tfidf_matrix[-len(liked_texts):], tfidf_matrix[:-len(liked_texts)])
+
+            # Rank products based on similarity scores
+            recommended_indices = similarity_scores.mean(axis=0).argsort()[::-1]
+            recommended_product_ids = [product_ids[idx] for idx in recommended_indices]
+
+            recommended_products = Product.objects.filter(id__in=recommended_product_ids)
+
+        # Exclude the logged-in user's own products
+        final_products = recommended_products.exclude(user=user)
+
+        # Convert to list and shuffle for randomness
+        final_products = list(final_products)
+        print(final_products)
+        random.shuffle(final_products)
+
+        if not final_products:
+            product_list = list(all_products)
+            random.shuffle(product_list)
+            return product_list
+
+        return final_products
 
 
 
